@@ -10,6 +10,9 @@ var yMn = -sMx;
 var xMx; // Maximum letter pos in x
 var yMx; // Maximum letter pos in y
 
+var currentGeneration;
+var currentDnaIndex = 0;
+
 let si = new Image();
 
 si.onload = function() {
@@ -67,14 +70,13 @@ function generateDna(nog, cback) {
   return dna
 }
 
-function mutateDna(dna, cback) {
-  for (idx in dna) {
-    let gen = dna[idx];
-    dc_ctx.font = gen.s + "px Arial";
-    dc_ctx.fillStyle = c2hex(gen.c);
-    dc_ctx.fillText(gen.t, gen.x, gen.y);  
+function mutateDna(dna) {
+  for (let i in dna) {
+    dna[i].x = (dna[i].x + randomBetween(0, 10)) - 5;
+    dna[i].y = (dna[i].y + randomBetween(0, 10)) - 5;
+    dna[i].s = (dna[i].s + randomBetween(0, 10)) - 5;
+    dna[i].c = (dna[i].c + randomBetween(0, 10)) - 5;
   }
-  if (cback != undefined) { cback() } 
 }
 
 function getDiff() {
@@ -92,6 +94,7 @@ function getDiff() {
 }
 
 function drawDna() {
+  dna = currentGeneration[currentDnaIndex];
   dc_ctx.fillStyle = "white";
   dc_ctx.fillRect(0, 0, dc.width, dc.height);
   for (idx in dna) {
@@ -100,39 +103,35 @@ function drawDna() {
     dc_ctx.fillStyle = c2hex(gen.c);
     dc_ctx.fillText(gen.t, gen.x, gen.y);  
   }
-  window.requestAnimationFrame(drawDna);
+  if (currentDnaIndex < currentGeneration.length - 1) {
+    dna.f = getDiff();
+    currentDnaIndex++;
+    window.requestAnimationFrame(drawDna);
+  } else {
+    console.log('Getting best DNA to next generation.')
+    let bestDna = currentGeneration.sort(function(a, b) { return a.f - b.f })[0];
+    nog = document.getElementById('nog').value;
+    for (let i in currentGeneration) {
+      currentGeneration[i] = mutateDna(bestDna);
+    }
+    currentDnaIndex = 0;
+    window.requestAnimationFrame(drawDna);
+  }
 }
 
 function loadImg() {
   si.src = document.getElementById('si').value  
 }
 
-var started = false;
-var geneStack = []
-
 function createGeneration(parentGeneration) {
   let newGeneration = new Array();
-  if (parentGeneration) {
-    for (idx in parentGeneration) {
-      newGeneration.push(mutateDna(parentGeneration[idx]))
-    }
-  } else {
-    for (let i=0; i<=100; i++) {
-      newGeneration.push(generateDna(document.getElementById('nog').value));
-    }
+  for (let i=0; i<=30; i++) {
+    newGeneration.push(generateDna(document.getElementById('nog').value));
   }
-  return newGeneration
+  return newGeneration;
 }
 
 function startStop() {
-  var old_score;
-  var generation;
-  var parentGeneration;
-  generation = createGeneration(parentGeneration)
-  var diffs = []
-  for (let idx in generation) {
-    var dna = generation[idx];
-    drawDna();      
-  }
-  console.log(diffs);
+  currentGeneration = createGeneration()
+  drawDna()
 }
