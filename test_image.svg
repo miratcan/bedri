@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+    <!-- Black rectangle on the left -->
+    <rect x="0" y="0" width="200" height="400" fill="black"/>
+    <!-- White rectangle on the right -->
+    <rect x="200" y="0" width="200" height="400" fill="white"/>
+</svg> 

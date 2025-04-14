@@ -17,13 +17,13 @@ let bestCtx = bestCanvas.getContext('2d', { willReadFrequently: true });
 
 // GA globals
 let population = [];
-let populationCount = 12;
-let mutationRate = 0.05;
-let elitismPercentage = 0.10;
-let selectionBias = 0.20;
+let populationCount = 24;
+let mutationRate = 0.1;
+let elitismPercentage = 0.15;
+let selectionBias = 0.30;
 let allowedLetters = '';
-let minSize = 8, maxSize = 40;
-let letterCount = 100;
+let minSize = 4, maxSize = 60;
+let letterCount = 200;
 let running = false;
 let generation = 0;
 let bestCandidate = null;
@@ -98,9 +98,27 @@ function drawCandidate(candidate, ctx) {
   
   // Draw candidate's genome
   candidate.genome.forEach(gene => {
+    // Save the current context state
+    ctx.save();
+    
+    // Move to the letter's position
+    ctx.translate(gene.x, gene.y);
+    
+    // Apply rotation
+    ctx.rotate(gene.r * Math.PI / 180);
+    
+    // Set font and color
     ctx.font = `${gene.s}px sans-serif`;
-    ctx.fillStyle = `rgba(0, 0, 0, ${gene.a})`;
-    ctx.fillText(gene.l, gene.x, gene.y);
+    const colorValue = Math.floor(gene.c);
+    // Use a higher opacity for darker colors to make them more visible
+    const opacity = 0.1 + (colorValue / 255) * 0.4; // Range from 0.1 to 0.5
+    ctx.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+    
+    // Draw the text at the rotated position
+    ctx.fillText(gene.l, 0, 0);
+    
+    // Restore the context state
+    ctx.restore();
   });
   
   // Debug: Draw a red pixel to ensure canvas is writable
@@ -156,7 +174,8 @@ function createCandidate() {
       x: randBetween(0, imgWidth),
       y: randBetween(0, imgHeight),
       s: randBetween(minSize, maxSize),
-      a: randBetween(0.1, 1.0)
+      c: randBetween(0, 255),  // color value between 0 (black) and 255 (white)
+      r: randBetween(0, 360)   // rotation in degrees (0-360)
     });
   }
   return { genome: genome, fitness: Infinity };
@@ -230,7 +249,8 @@ function crossover(parentA, parentB) {
       x: random() < 0.5 ? geneA.x : geneB.x,
       y: random() < 0.5 ? geneA.y : geneB.y,
       s: random() < 0.5 ? geneA.s : geneB.s,
-      a: random() < 0.5 ? geneA.a : geneB.a
+      c: random() < 0.5 ? geneA.c : geneB.c,
+      r: random() < 0.5 ? geneA.r : geneB.r
     };
     
     childGenome.push(newGene);
@@ -242,25 +262,48 @@ function crossover(parentA, parentB) {
 // Apply mutation to a candidate
 function mutate(candidate) {
   for (let i = 0; i < candidate.genome.length; i++) {
-    /*
     if (random() < mutationRate) {
       candidate.genome[i].l = randLetter(allowedLetters);
     }
-    */
     if (random() < mutationRate) {
-      const maxDelta = imgWidth * 0.1;
-      candidate.genome[i].x = clamp(candidate.genome[i].x + randBetween(-maxDelta, maxDelta), 0, imgWidth);
+      if (random() < 0.01) {
+        candidate.genome[i].x = randBetween(0, imgWidth);
+      } else {
+        const maxDelta = imgWidth * 0.05; // Reduced from 0.1 to 0.05 for more precise positioning
+        candidate.genome[i].x = clamp(candidate.genome[i].x + randBetween(-maxDelta, maxDelta), 0, imgWidth);
+      }
+   }
+    if (random() < mutationRate) {
+      if (random() < 0.01) {
+        candidate.genome[i].y = randBetween(0, imgHeight);
+      } else {
+        const maxDelta = imgHeight * 0.05; // Reduced from 0.1 to 0.05 for more precise positioning
+        candidate.genome[i].y = clamp(candidate.genome[i].y + randBetween(-maxDelta, maxDelta), 0, imgHeight);
+      }
+   }
+    if (random() < mutationRate) {
+      if (random() < 0.01) {
+        candidate.genome[i].s = randBetween(minSize, maxSize);
+      } else {
+        const currentSize = candidate.genome[i].s;
+        candidate.genome[i].s = clamp(currentSize + randBetween(-currentSize * 0.05, currentSize * 0.05), minSize, maxSize);
+      }
     }
     if (random() < mutationRate) {
-      const maxDelta = imgHeight * 0.1;
-      candidate.genome[i].y = clamp(candidate.genome[i].y + randBetween(-maxDelta, maxDelta), 0, imgHeight);
+      if (random() < 0.01) {
+        candidate.genome[i].c = randBetween(0, 255);
+      } else {
+        const maxDelta = 15; // Reduced from 25 to 15 for more subtle color changes
+        candidate.genome[i].c = clamp(candidate.genome[i].c + randBetween(-maxDelta, maxDelta), 0, 255);
+      }
     }
     if (random() < mutationRate) {
-      const currentSize = candidate.genome[i].s;
-      candidate.genome[i].s = clamp(currentSize + randBetween(-currentSize * 0.1, currentSize * 0.1), minSize, maxSize);
-    }
-    if (random() < mutationRate) {
-      candidate.genome[i].a = clamp(candidate.genome[i].a + randBetween(-0.1, 0.1), 0.1, 1.0);
+      if (random() < 0.01) {
+        candidate.genome[i].r = randBetween(0, 360);
+      } else {
+        const maxDelta = 15; // Reduced from 45 to 15 for more subtle rotation changes
+        candidate.genome[i].r = clamp(candidate.genome[i].r + randBetween(-maxDelta, maxDelta), 0, 360);
+      }
     }
   }
 }
