@@ -11,8 +11,8 @@ const maxPixelSize = 1000000;
 
 const randColor = () => {
   const h = Math.floor(mR() * 360); // Hue: 0-360
-  const s = 50 + mR() * 50; // Saturation: 50-100%
-  const l = 50 + mR() * 50; // Lightness: 50-100%
+  const s = 10 + mR() * 90; // Saturation: 50-100%
+  const l = mR() * 100; // Lightness: 0-100%
   return `hsla(${h}, ${s}%, ${l}%, ${options.opacity})`;
 };
 
@@ -97,8 +97,16 @@ function handleImageUpload(e) {
       srcWidth = img.width;
       srcHeight = img.height;
 
-      srcCanvas.width = dstCanvas.width = cdtCanvas.width = srcWidth;
-      srcCanvas.height = dstCanvas.height = cdtCanvas.height = srcHeight;
+      srcCanvas.width = srcWidth;
+      srcCanvas.height = srcHeight;
+      dstCanvas.width = srcWidth;
+      dstCanvas.height = srcHeight;
+      cdtCanvas.width = srcWidth;
+      cdtCanvas.height = srcHeight;
+      srcCanvas.style.width = '100%'
+      srcCanvas.style.height = 'auto'
+      dstCanvas.style.width = '100%'
+      dstCanvas.style.height = 'auto'
 
       srcCtx.drawImage(img, 0, 0);
       srcBArray = calcBrightness(srcCtx);
@@ -117,7 +125,7 @@ function handleImageUpload(e) {
 function downloadImage() {
   const link = document.createElement("a");
   link.href = dstCanvas.toDataURL("image/png");
-  link.download = "wordcanvas.png";
+  link.download = "textdraw.png";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

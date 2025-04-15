@@ -68,7 +68,7 @@ function processLineWorker({ line, canvasData, iterations, minSize, maxSize, col
     const fontSize = Math.floor(Math.random() * (maxSize - minSize + 1)) + minSize;
     const x = Math.random() * self.srcWidth;
     const y = Math.random() * self.srcHeight;
-    const rotation = Math.random() * Math.PI * 2;
+    const rotation = (Math.random() * Math.PI) - (Math.PI / 2);
 
     const r = Math.floor(Math.random() * 256);
     const g = Math.floor(Math.random() * 256);
