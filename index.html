@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WordCanvas: Image-to-Text Renderer</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body >
+    <header>
+      <h1>WordCanvas: Image-to-Text Renderer</h1>
+    </header>
+    <main>
+			<section class="card left-column">
+				<fieldset>
+					<legend>Source</legend>
+					<div class="input-group">
+						<label for="imageInput">Input Image:</label>
+						<input type="file" id="imageInput" accept="image/*" class="input" />
+						<p id="srcInfo" class="helptext">Loaded image etc...</p>
+					</div>
+					<div class="input-group">
+						<label for="wordList">Text Blocks:</label>
+						<textarea
+							id="lines"
+							class="input"
+							placeholder="Enter text blocks, one per line. Each line will be treated as a separate block of text."
+						>Words In This
+Will be used
+to draw the
+image.</textarea>
+					</div>
+				</fieldset>
+				<fieldset>
+					<legend>Controls</legend>
+					<div class="button-group">
+						<button id="startButton" class="button primary">Start</button>
+						<button id="stopButton" class="button" disabled>Stop</button>
+						<button id="resetButton" class="button error">Reset</button>
+					</div>
+				</fieldset>
+				<fieldset>
+					<legend>Font</legend>
+					<div class="input-group">
+						<label for="minSize">Min Size: <span id="minSizeValue">12</span>px</label>
+						<input type="range" id="minSize" min="8" max="40" value="12" step="1" class="input" oninput="document.getElementById('minSizeValue').textContent = this.value" />
+					</div>
+					<div class="input-group">
+						<label for="maxSize">Max Size: <span id="maxSizeValue">24</span>px</label>
+						<input type="range" id="maxSize" min="12" max="72" value="24" step="1" class="input" oninput="document.getElementById('maxSizeValue').textContent = this.value" />
+					</div>
+					<div class="input-group">
+						<label for="opacity">Opacity: <span id="opacityValue">0.4</span></label>
+						<input type="range" id="opacity" min="0.1" max="1" value="0.4" step="0.1" class="input" oninput="document.getElementById('opacityValue').textContent = this.value" />
+					</div>
+				</fieldset>
+				<fieldset>
+					<legend>Performance</legend>
+					<div class="input-group">
+						<label for="iterations">Number of Lines:</label>
+						<input type="number" id="nofLines" min="100" max="10000" value="2500" class="input" />
+						<p class="helptext">Specify the total number of lines to be placed on the image. More words will create a more detailed result but take longer to process.</p>
+					</div>
+					<div class="input-group">
+						<label for="iterations">Iterations:</label>
+						<input type="number" id="iterations" min="1" max="1000" value="20" class="input" />
+						<p class="helptext">
+							Specify the number of iterations for word placement optimization. 
+							Higher values may improve the result but increase processing time.
+						</p>
+					</div>
+					<div class="input-group">
+						<label for="sampleRate">Sample Rate:</label>
+						<input type="number" id="sampleRate" min="1" max="20" value="4" class="input" />
+						<p class="helptext">
+							Controls how frequently pixels are sampled from the image.
+							Higher values improve quality but increase processing time.
+						</p>
+					</div>
+				</fieldset>
+			</section>
+			<section class="grow">
+				<div class="row">
+					<div class="card">
+						<h2>Source</h2>
+						<canvas id="srcCanvas"></canvas>
+					</div>
+					<div class="card">
+						<h2>Result</h2>
+						<canvas id="dstCanvas"></canvas>
+					</div>
+				</div>
+				<div class="card row">
+					<progress id="progress" class="grow" max="100" value="70">70%</progress>
+					<Button id="downlButton">Download</Button>
+				</div>
+			</section>
+			<section class="ads-160-600">
+				<img src="https://yydevelopment.com/wp-content/uploads/2019/10/tsplus-affiliate-160x600-banner.gif" />
+			</section>
+    <script src="index.js"></script>
+  </body>
+</html>
