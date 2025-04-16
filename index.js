@@ -234,8 +234,11 @@ function initializeWorkerPool() {
           dstCtx.save();
           dstCtx.translate(x, y);
           dstCtx.rotate(rotation);
+          dstCtx.shadowColor = "black";
+          dstCtx.shadowBlur = 10;
           dstCtx.font = `${fontSize}px Arial`;
           dstCtx.fillStyle = color;
+          dstCtx.strokeStyle = 'black';
           dstCtx.textAlign = "center";
           dstCtx.textBaseline = "middle";
           dstCtx.fillText(line, 0, 0);

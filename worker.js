@@ -79,12 +79,13 @@ function processLineWorker({ line, canvasData, iterations, minSize, maxSize, col
     testCtx.save();
     testCtx.translate(x, y);
     testCtx.rotate(rotation);
+    testCtx.shadowColor = "black";
+    testCtx.shadowBlur = 10;
     testCtx.font = `${fontSize}px Arial`;
     testCtx.fillStyle = color;
     testCtx.textAlign = "center";
     testCtx.textBaseline = "middle";
     testCtx.fillText(line, 0, 0);
-
     const testData = testCtx.getImageData(0, 0, self.srcWidth, self.srcHeight);
     const dstBArr = calcBrightness(testData.data);
     const fitness = calculateFitness(dstBArr);
