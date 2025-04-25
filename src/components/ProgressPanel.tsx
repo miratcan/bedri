@@ -1,25 +1,33 @@
 import { WorkerProcessStats } from '../types';
 
 interface ProgressPanelProps {
+  currentGeneration: number;
   processStats: WorkerProcessStats;
 }
 
-export function ProgressPanel({ processStats }: ProgressPanelProps) {
+export function ProgressPanel({ currentGeneration, processStats }: ProgressPanelProps) {
   return (
     <div class="progress-panel">
       <h3 class="progress-title">Processing Status</h3>
-      {Object.entries(processStats).map(([id, stats]) => {
-        const percentage = Math.round((stats.processed / stats.total) * 100) || 0;
-        return (
-          <div key={id} class="progress-item">
-            <span class="progress-label">Worker {id}</span>
-            <div class="progress-bar-container">
-              <div class="progress-bar" style={{ width: `${percentage}%` }}></div>
-            </div>
-            <span class="progress-stats">{stats.processed}/{stats.total} ({percentage}%)</span>
-          </div>
-        );
-      })}
+      <p>Generation: {currentGeneration}</p>
+      <table class="progress-table">
+        <thead>
+          <tr>
+            <th>Worker</th>
+            <th>Progress</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(processStats).map(([id, stats]) => {
+            return (
+              <tr key={id}>
+                <td>Worker {id}</td>
+                <td>{stats.processed}/{stats.total}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 } 

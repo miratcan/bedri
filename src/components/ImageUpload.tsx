@@ -1,18 +1,18 @@
 import { RefObject } from 'preact';
 
 import { MAX_PIXEL_SIZE } from '../constants';
-import { CurrentImage, DestinationImage } from '../types';
+import { CurrentImage, SelectedImage } from '../types';
 import { calcBrightness } from '../helpers';
 
 interface ImageUploadProps {
-  destinationCanvasRef: RefObject<HTMLCanvasElement>;
-  destinationImage: DestinationImage | null;
-  setDestinationImage: (source: DestinationImage | null) => void;
+  selectedCanvasRef: RefObject<HTMLCanvasElement>;
+  selectedImage: SelectedImage | null;
+  setSelectedImage: (source: SelectedImage | null) => void;
   setCurrentImage: (source: CurrentImage | null) => void;
 }
 
 export function ImageUpload({ 
-  destinationCanvasRef, destinationImage, setDestinationImage, setCurrentImage
+  selectedCanvasRef, selectedImage, setSelectedImage, setCurrentImage
 }: ImageUploadProps) {
   const onImgLoad = (img: HTMLImageElement) => {
     // Create temporary canvas for brightness calculation
@@ -28,7 +28,7 @@ export function ImageUpload({
     // Calculate brightness array
     const brightnessArray = calcBrightness(tempCtx, img.width, img.height);
 
-    const _destination: DestinationImage = {
+    const _selected: SelectedImage = {
       size: {
         width: img.width,
         height: img.height,
@@ -36,7 +36,7 @@ export function ImageUpload({
       bArray: brightnessArray,
       iData: tempCtx.getImageData(0, 0, img.width, img.height)
     };
-    setDestinationImage(_destination);
+    setSelectedImage(_selected);
 
     // Create blank black canvas for current image
     const blankCanvas = document.createElement('canvas');
@@ -51,7 +51,11 @@ export function ImageUpload({
 
     const _current: CurrentImage = {
       bArray: new Float32Array(img.width * img.height), // All black pixels (0)
-      iData: blankCtx.getImageData(0, 0, img.width, img.height)
+      iData: blankCtx.getImageData(0, 0, img.width, img.height),
+      size: {
+        width: img.width,
+        height: img.height
+      }
     };
     setCurrentImage(_current);
   };
@@ -87,17 +91,17 @@ export function ImageUpload({
         onClick={() => document.getElementById('fileInput')?.click()}
         class="upload-button"
       >
-        {destinationImage ? 'Change Image' : 'Select Image'}
+        {selectedImage ? 'Change Image' : 'Select Image'}
       </button>
       <canvas 
-        ref={destinationCanvasRef}
-        id="destinationCanvas" 
-        width={destinationImage?.size.width || 100} 
-        height={destinationImage?.size.height || 100}
+        ref={selectedCanvasRef}
+        id="selectedCanvas" 
+        width={selectedImage?.size.width || 100} 
+        height={selectedImage?.size.height || 100}
       />
-      {destinationImage && (
+      {selectedImage && (
         <div class="image-info">
-          <div>Dimensions: {destinationImage.size.width}x{destinationImage.size.height}px</div>
+          <div>Dimensions: {selectedImage.size.width}x{selectedImage.size.height}px</div>
         </div>
       )}
     </div>

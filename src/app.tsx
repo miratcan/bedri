@@ -1,15 +1,13 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState, useMemo } from 'preact/hooks';
 import './app.css';
 import { FontSettings } from './components/FontSettings';
 import { ImageUpload } from './components/ImageUpload';
 import { ProcessingSettings } from './components/ProcessingSettings';
-import { ShadowSettings } from './components/ShadowSettings';
 import { TextContent } from './components/TextContent';
 import { DEFAULT_BLOCKS, MAX_ACTIVE_WORKERS } from './constants';
-import { Options, DestinationImage, WorkerMessage, WorkerProcessStats, Candidate, UpdateMessage, BaseMessage, DoneMessage, ErrorMessage, CurrentImage, InitMessage } from './types';
-import { ProgressPanel } from './components/ProgressPanel';
+import { Options, SelectedImage, WorkerMessage, WorkerProcessStats, Candidate, UpdateMessage, BaseMessage, DoneMessage, CurrentImage } from './types';
 import { Controls } from './components/Controls';
-
+import { renderCandidate } from './helpers';
 
 export function App() {
   const [inputValues, setInputValues] = useState({
@@ -26,117 +24,118 @@ export function App() {
         blur: '0',
         offsetX: '0',
         offsetY: '0',
-        enabled: 'false'
-      }
+        enabled: 'false',
+      },
     },
-    iterations: '100',
-    generations: '2500'
+    iterations: 80,
+    generations: 800
   });
   const [processing, setProcessing] = useState(false);
   const [currentGeneration, setCurrentGeneration] = useState<number>(0);
   const [processStats, setProcessStats] = useState<WorkerProcessStats>();
   const [champions, setChampions] = useState<Record<number, Candidate>>({});
   const [currentImage, setCurrentImage] = useState<CurrentImage | null>(null);
-  const [destinationImage, setDestinationImage] = useState<DestinationImage | null>(null);
-
+  const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(null);
   const workersRef = useRef<Array<Worker>>([]);
   const currentCanvasRef = useRef<HTMLCanvasElement>(null);
-  const destinationCanvasRef = useRef<HTMLCanvasElement>(null);
+  const selectedCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    initializeWorkerPool()
-  }, [])
+    if (selectedImage) {
+      initializeWorkerPool();
+    }
+  }, [selectedImage]);
 
   useEffect(() => {
-    // Find the champion of champions and draw it to the canvas
-    if (Object.keys(champions).length > 0 && destinationCanvasRef.current && destinationImage) {
-      // Find the champion with the highest score
-      const championArray = Object.values(champions) as Candidate[];
-      const bestChampion = championArray.reduce((best, current) => {
-        if (!best || (current.score ?? 0) > (best.score ?? 0)) {
-          return current;
-        }
-        return best;
-      }, null as Candidate | null);
-      
-      if (bestChampion) {
-        // Draw the best champion to the destination canvas
-        const ctx = currentCanvasRef.current!.getContext('2d') as CanvasRenderingContext2D;
-        if (ctx) {
-          
-          // Draw the champion
-          ctx.save();
-          ctx.font = `${bestChampion.s}px ${inputValues.font.family}`;
-          ctx.fillStyle = `rgba(255, 255, 255, ${bestChampion.o})`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          
-          // Apply shadow if enabled
-          if (inputValues.font.shadow.enabled === 'true') {
-            ctx.shadowColor = inputValues.font.shadow.color;
-            ctx.shadowBlur = parseInt(inputValues.font.shadow.blur);
-            ctx.shadowOffsetX = parseInt(inputValues.font.shadow.offsetX);
-            ctx.shadowOffsetY = parseInt(inputValues.font.shadow.offsetY);
-          }
-          
-          // Draw the text
-          ctx.fillText(bestChampion.t, bestChampion.x, bestChampion.y);
-          ctx.restore();
-          
-          // Update current generation
-          setCurrentGeneration(prev => prev + 1);
-          
-          // Update current image with the new canvas content
-          if (destinationCanvasRef.current) {
-            const imageData = ctx.getImageData(0, 0, destinationImage.size.width, destinationImage.size.height);
-            setCurrentImage({
-              iData: imageData,
-              size: {
-                width: destinationImage.size.width,
-                height: destinationImage.size.height
-              }
-            });
-            
-            // If still processing, initialize workers with the new current image
-            if (processing) {
-              const options = readOptions();
-              for (let i = 0; i < MAX_ACTIVE_WORKERS; i++) {
-                const worker = workersRef.current[i];
-                if (!worker) {
-                  console.log(`Error: Worker ${i} not found`);
-                  continue;
-                }
-                const nofCandidates = Math.floor(options.iterations / MAX_ACTIVE_WORKERS) +
-                  (i < options.iterations % MAX_ACTIVE_WORKERS ? 1 : 0);
-                worker.postMessage({
-                  action: 'init',
-                  workerId: i,
-                  timestamp: Date.now(),
-                  currentImage: {
-                    iData: imageData,
-                    size: {
-                      width: destinationImage.size.width,
-                      height: destinationImage.size.height
-                    }
-                  },
-                  destinationImage: destinationImage,
-                  options: options,
-                  nofCandidates: nofCandidates
-                });
-              }
-            }
-          }
-        }
-      }
+    // Only proceed if all workers have reported their champion
+    if (
+      Object.keys(champions).length !== MAX_ACTIVE_WORKERS ||
+      !selectedCanvasRef.current ||
+      !selectedImage
+    ) {
+      return;
     }
 
+    // Only proceed if processing is active
+    if (!processing) return;
 
-  }, [champions])
+    // If we've reached the max generations, stop processing
+    if (currentGeneration + 1 >= options.generations) {
+      setProcessing(false);
+      return;
+    }
+
+    // Increment generation
+    setCurrentGeneration(prev => prev + 1);
+
+    // Find the legend among champions
+    const championArray = Object.values(champions) as Candidate[];
+    const legend = championArray.reduce((best, current) => {
+      if (!best || (current.score ?? 0) > (best.score ?? 0)) {
+        return current;
+      }
+      return best;
+    }, null as Candidate | null);
+
+    if (!legend) return;
+
+    console.log('Legend for next generation:', JSON.stringify(legend));
+
+    // Render the legend to a new image and update currentImage
+    const canvas = document.createElement('canvas');
+    canvas.width = selectedImage.size.width;
+    canvas.height = selectedImage.size.height;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (ctx) {
+      // If there is a currentImage, start with it, otherwise fill with black
+      if (currentImage) {
+        ctx.putImageData(currentImage.iData, 0, 0);
+      } else {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      // Use renderCandidate to draw the legend on top of the existing image
+      renderCandidate(
+        currentImage
+          ? currentImage
+          : {
+            iData: ctx.getImageData(0, 0, canvas.width, canvas.height),
+            size: { width: canvas.width, height: canvas.height }
+          },
+        legend,
+        options,
+        ctx
+      );
+      setCurrentImage({
+        iData: ctx.getImageData(0, 0, canvas.width, canvas.height),
+        size: { width: canvas.width, height: canvas.height }
+      });
+    }
+
+    // Start next generation with the legend
+    for (let i = 0; i < MAX_ACTIVE_WORKERS; i++) {
+      const worker = workersRef.current[i];
+      if (!worker) continue;
+      const nofCandidates = Math.floor(options.iterations / MAX_ACTIVE_WORKERS) +
+        (i < options.iterations % MAX_ACTIVE_WORKERS ? 1 : 0);
+      // console.log('Sending enter to worker', i, 'nofCandidates:', nofCandidates, 'options:', options);
+      worker.postMessage({
+        action: 'enter',
+        workerId: i,
+        timestamp: Date.now(),
+        legend: legend,
+        options: options,
+        nofCandidates: nofCandidates
+      });
+    }
+    // Reset champions for the next generation
+    setChampions({});
+  }, [champions]);
 
   useEffect(() => {
     // Update the current canvas when currentImage changes
     if (currentImage && currentCanvasRef.current) {
-      const ctx = currentCanvasRef.current.getContext('2d');
+      const ctx = currentCanvasRef.current.getContext('2d', { willReadFrequently: true });
       if (ctx) {
         // Make sure canvas dimensions match the image data
         if (currentCanvasRef.current.width !== currentImage.iData.width ||
@@ -151,24 +150,23 @@ export function App() {
   }, [currentImage])
 
   useEffect(() => {
-    // Redraw the destination canvas when destinationImage changes
-    if (destinationImage && destinationCanvasRef.current) {
-      const ctx = destinationCanvasRef.current.getContext('2d');
-      if (ctx) {
-        // Make sure canvas dimensions match the image data
-        if (destinationCanvasRef.current.width !== destinationImage.size.width ||
-          destinationCanvasRef.current.height !== destinationImage.size.height) {
-          destinationCanvasRef.current.width = destinationImage.size.width;
-          destinationCanvasRef.current.height = destinationImage.size.height;
-        }
-        // Draw the destination image data to the canvas
-        ctx.putImageData(destinationImage.iData, 0, 0);
+    // Redraw the selected canvas when selectedImage changes
+    if (selectedImage && selectedCanvasRef.current) {
+      const ctx = selectedCanvasRef.current.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return;
+
+      if (selectedCanvasRef.current.width !== selectedImage.size.width ||
+        selectedCanvasRef.current.height !== selectedImage.size.height) {
+        selectedCanvasRef.current.width = selectedImage.size.width;
+        selectedCanvasRef.current.height = selectedImage.size.height;
       }
+      ctx.putImageData(selectedImage.iData, 0, 0);
     }
-  }, [destinationImage])
+  }, [selectedImage]);
 
   const handleInputChange = (e: Event) => {
     const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+    const value = target.type === 'number' ? Number(target.value) : target.value;
     const [, subsection, field] = target.name.split('.');
 
     if (subsection && field) {
@@ -176,10 +174,7 @@ export function App() {
         ...prev,
         font: {
           ...prev.font,
-          shadow: {
-            ...prev.font.shadow,
-            [field]: target.value
-          }
+          [subsection]: value
         }
       }));
     } else if (subsection) {
@@ -187,18 +182,18 @@ export function App() {
         ...prev,
         font: {
           ...prev.font,
-          [subsection]: target.value
+          [subsection]: value
         }
       }));
     } else {
       setInputValues(prev => ({
         ...prev,
-        [target.name]: target.value
+        [target.name]: value
       }));
     }
   };
 
-  const readOptions = (): Options => {
+  const options = useMemo((): Options => {
     const blocks = inputValues.useType === 'words'
       ? inputValues.blocks.trim().split(/\s+/)
       : inputValues.blocks.trim().split(/\n+/);
@@ -211,23 +206,16 @@ export function App() {
         maxSize: parseInt(inputValues.font.maxSize),
         opacity: parseFloat(inputValues.font.opacity),
         bold: inputValues.font.bold === 'true',
-        shadow: {
-          color: inputValues.font.shadow.color,
-          blur: parseInt(inputValues.font.shadow.blur),
-          offsetX: parseInt(inputValues.font.shadow.offsetX),
-          offsetY: parseInt(inputValues.font.shadow.offsetY),
-          enabled: inputValues.font.shadow.enabled === 'true'
-        }
       },
-      iterations: parseInt(inputValues.iterations),
-      generations: parseInt(inputValues.generations)
+      iterations: inputValues.iterations,
+      generations: inputValues.generations
     };
-  };
+  }, [inputValues]);
 
   const downloadImage = () => {
-    if (destinationCanvasRef.current) {
+    if (currentCanvasRef.current) {
       const link = document.createElement("a");
-      link.href = destinationCanvasRef.current.toDataURL("image/png");
+      link.href = currentCanvasRef.current.toDataURL("image/png");
       link.download = "textdraw.png";
       document.body.appendChild(link);
       link.click();
@@ -236,34 +224,38 @@ export function App() {
   };
 
   const initializeWorkerPool = () => {
-    // Clear existing workers if any
-    workersRef.current.forEach(worker => {
-      if (worker) {
-        worker.terminate();
+    // Guard: only initialize if selectedImage is available
+    if (!selectedImage) {
+      return;
+    }
+    // Clear existing arenas if any
+    workersRef.current.forEach(arena => {
+      if (arena) {
+        arena.terminate();
       }
     });
     workersRef.current = [];
 
     for (let i = 0; i < MAX_ACTIVE_WORKERS; i++) {
-      console.log(`Initializing worker: ${i}`);
+      // console.log(`Initializing arena: ${i}`);
       try {
-        const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
-        worker.onmessage = (e: MessageEvent<WorkerMessage>) => {
+        const arena = new Worker(new URL('./arena.ts', import.meta.url), { type: 'module' });
+        arena.onmessage = (e: MessageEvent<WorkerMessage>) => {
           const { action, workerId } = e.data;
 
           if ('reason' in e.data) {
-            console.log(`Worker ${workerId}: Error - ${e.data.reason}`);
+            // console.log(`Arena ${workerId}: Error - ${e.data.reason}`);
             return;
           }
 
           if (workerId === undefined) {
-            console.log('Worker message received without ID');
+            // console.log('Arena message received without ID');
             return;
           }
 
           switch (action) {
             case 'ready':
-              console.log(`Worker ${workerId} initialized and ready.`);
+              // console.log(`Arena ${workerId} initialized and ready.`);
               setProcessStats(prevState => {
                 const old = prevState ?? {};
                 return {
@@ -278,7 +270,7 @@ export function App() {
             case 'initialized':
               if (!processing) {
                 workersRef.current[workerId]?.postMessage({
-                  action: 'process',
+                  action: 'battle',
                   timestamp: Date.now(),
                   workerId
                 });
@@ -301,28 +293,24 @@ export function App() {
               const doneMessage = e.data as DoneMessage & BaseMessage;
               setChampions(prevState => ({
                 ...prevState,
-                [workerId]: doneMessage.fittest.candidate as Candidate
+                [workerId]: doneMessage.victor.candidate as Candidate
               }));
               break;
             case 'error':
-              const errorMessage = e.data as ErrorMessage & BaseMessage;
-              console.log(`Worker ${workerId}: Error - ${errorMessage.reason}`);
+              // console.log(`Arena ${workerId}: Error - ${e.data.reason}`);
               break;
           }
         };
 
-        worker.onerror = (error) => {
-          console.log(`Worker error: ${error.message}`);
-        };
-
-        worker.postMessage({
-          action: 'ignite',
+        arena.postMessage({
+          action: 'prepare',
           workerId: i,
+          selectedImage: selectedImage,
           timestamp: Date.now()
         });
-        workersRef.current[i] = worker;
+        workersRef.current[i] = arena;
       } catch (error) {
-        console.log(`Failed to initialize worker ${i}: ${error}`);
+        // console.error(`Failed to initialize arena ${i}:`, error);
       }
     }
   };
@@ -331,24 +319,23 @@ export function App() {
     if (processing) {
       return;
     }
-    if (!destinationImage) {
-      console.log("Error: Please upload an image first");
+    if (!selectedImage) {
+      // console.log("Error: Please upload an image first");
       alert("Please upload an image first.");
       return;
     }
     if (!workersRef.current || workersRef.current.length === 0) {
-      console.log("Error: Workers not initialized");
+      // console.log("Error: Workers not initialized");
       alert("Workers are not initialized yet.");
       return;
     }
-    const options = readOptions();
     if (options.blocks.length === 0) {
-      console.log("Error: No text blocks provided");
+      // console.log("Error: No text blocks provided");
       alert("Please enter some text first.");
       return;
     }
     if (options.font.minSize >= options.font.maxSize) {
-      console.log("Error: Invalid font size range");
+      // console.log("Error: Invalid font size range");
       alert("Minimum font size must be less than maximum font size.");
       return;
     }
@@ -358,18 +345,14 @@ export function App() {
     setChampions({});
     for (let i = 0; i < MAX_ACTIVE_WORKERS; i++) {
       const worker = workersRef.current[i];
-      if (!worker) {
-        console.log(`Error: Worker ${i} not found`);
-        continue;
-      }
+      if (!worker) continue;
       const nofCandidates = Math.floor(options.iterations / MAX_ACTIVE_WORKERS) +
         (i < options.iterations % MAX_ACTIVE_WORKERS ? 1 : 0);
+      // console.log('Sending enter to worker', i, 'nofCandidates:', nofCandidates, 'options:', options);
       worker.postMessage({
-        action: 'init',
+        action: 'enter',
         workerId: i,
         timestamp: Date.now(),
-        currentImage: currentImage,
-        destinationImage: destinationImage,
         options: options,
         nofCandidates: nofCandidates
       });
@@ -377,7 +360,7 @@ export function App() {
   };
 
   const stopProcessing = () => {
-    console.log("Processing stopped by user");
+    // console.log("Processing stopped by user");
     setProcessing(false);
     workersRef.current.forEach(worker => {
       worker.terminate();
@@ -386,124 +369,62 @@ export function App() {
   };
 
   const reset = () => {
-    console.log("Reset requested - clearing canvas");
+    // console.log("Reset requested - clearing canvas");
     setProcessing(false);
     setCurrentGeneration(0);
     setProcessStats(undefined);
     setChampions({});
-    if (destinationCanvasRef.current) {
-      const ctx = destinationCanvasRef.current.getContext('2d');
+    if (selectedCanvasRef.current) {
+      const ctx = selectedCanvasRef.current.getContext('2d', { willReadFrequently: true });
       if (ctx) {
-        ctx.clearRect(0, 0, destinationCanvasRef.current.width, destinationCanvasRef.current.height);
+        ctx.clearRect(0, 0, selectedCanvasRef.current.width, selectedCanvasRef.current.height);
       }
     }
   };
-
-  // Add progress visualization
-  useEffect(() => {
-    if (!destinationCanvasRef.current || !destinationImage || Object.keys(champions).length === 0) return;
-
-    const ctx = destinationCanvasRef.current.getContext('2d');
-    if (!ctx) return;
-
-    // Clear the canvas
-    ctx.clearRect(0, 0, destinationImage.size.width, destinationImage.size.height);
-
-    // Draw each champion
-    Object.values(champions).forEach(champion => {
-      if (!champion) return;
-
-      ctx.save();
-      ctx.font = `${champion.s}px ${inputValues.font.family}`;
-      ctx.fillStyle = `rgba(255, 255, 255, ${champion.o})`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      // Apply shadow if enabled
-      if (inputValues.font.shadow.enabled === 'true') {
-        ctx.shadowColor = inputValues.font.shadow.color;
-        ctx.shadowBlur = parseInt(inputValues.font.shadow.blur);
-        ctx.shadowOffsetX = parseInt(inputValues.font.shadow.offsetX);
-        ctx.shadowOffsetY = parseInt(inputValues.font.shadow.offsetY);
-      }
-
-      // Apply rotation and draw text
-      ctx.translate(champion.x, champion.y);
-      ctx.rotate(champion.r);
-      ctx.fillText(champion.t, 0, 0);
-      ctx.restore();
-    });
-  }, [champions, destinationImage, inputValues.font]);
-
-  useEffect(() => {
-    return () => {
-      workersRef.current?.forEach((worker: Worker) => worker.terminate());
-    };
-  }, []);
 
   return (
     <div class="wrapper">
       <div class="description">
         <p>Upload an image and enter text lines. The app will generate a text-based representation of the image using the provided text.</p>
       </div>
-
-      <div class="canvas-container">
-        <canvas ref={currentCanvasRef} id="currentCanvas" />
-      </div>
-
-      <div class="progress-container">
-        {processStats && <ProgressPanel processStats={processStats} />}
-      </div>
-
-      <div class="inputs">
-        <ImageUpload 
-          destinationCanvasRef={destinationCanvasRef}
-          destinationImage={destinationImage}
-          setDestinationImage={setDestinationImage}
-          setCurrentImage={setCurrentImage}
-        />
-
-        <TextContent
-          inputValues={inputValues}
-          onInputChange={handleInputChange}
-        />
-
-        <FontSettings
-          inputValues={inputValues}
-          onInputChange={handleInputChange}
-        />
-
-        <ShadowSettings
-          inputValues={inputValues}
-          onInputChange={handleInputChange}
-        />
-
-        <ProcessingSettings
-          inputValues={inputValues}
-          onInputChange={handleInputChange}
-        />
-        <Controls
-          onStart={startProcessing}
-          onStop={stopProcessing}
-          onReset={reset}
-          onDownload={downloadImage}
-          processing={processing}
-          imageLoaded={!!destinationImage}
-          totalProcessed={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.processed, 0) : 0}
-          linesCount={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.total, 0) : 0}
-        />
-      </div>
-
-      <div class="ad-container">
-        <div class="ad-placeholder">
-          Sponsor
+      <div class='row'>
+        <div class="inputs">
+          <ImageUpload
+            selectedCanvasRef={selectedCanvasRef}
+            selectedImage={selectedImage}
+            setSelectedImage={setSelectedImage}
+            setCurrentImage={setCurrentImage}
+          />
+          <TextContent
+            inputValues={inputValues}
+            onInputChange={handleInputChange}
+          />
+          <FontSettings
+            inputValues={inputValues}
+            onInputChange={handleInputChange}
+          />
+          <ProcessingSettings
+            inputValues={inputValues}
+            onInputChange={handleInputChange}
+          />
         </div>
-        <div class="ad-placeholder">
-          Sponsor
+        <div class="canvas-container">
+          <canvas ref={currentCanvasRef} id="currentCanvas" />
+          <Controls
+            onStart={startProcessing}
+            onStop={stopProcessing}
+            onReset={reset}
+            onDownload={downloadImage}
+            totalProcessed={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.processed, 0) : 0}
+            linesCount={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.total, 0) : 0}
+          />
         </div>
-        <div class="ad-placeholder">
-          Sponsor
+        {/*
+        <div class="progress-container">
+          {processStats && <ProgressPanel currentGeneration={currentGeneration} processStats={processStats} />}
         </div>
+        */}
+
       </div>
     </div>
   );

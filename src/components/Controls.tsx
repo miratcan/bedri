@@ -1,18 +1,13 @@
-import { h } from 'preact';
-import { Fittest } from '../types';
-
 interface ControlsProps {
   onStart: () => void;
   onStop: () => void;
   onReset: () => void;
   onDownload: () => void;
-  processing: boolean;
-  imageLoaded: boolean;
   totalProcessed: number;
   linesCount: number;
 }
 
-export function Controls({ onStart, onStop, onReset, onDownload, processing, imageLoaded, totalProcessed, linesCount }: ControlsProps) {
+export function Controls({ onStart, onStop, onReset, onDownload, totalProcessed, linesCount }: ControlsProps) {
   return (
     <div class="controls">
       <button onClick={onStart}>

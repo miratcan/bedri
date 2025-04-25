@@ -1,7 +1,7 @@
 interface ProcessingSettingsProps {
   inputValues: {
-    iterations: string;
-    generations: string;
+    iterations: number;
+    generations: number;
   };
   onInputChange: (e: Event) => void;
 }

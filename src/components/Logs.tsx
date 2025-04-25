@@ -1,5 +1,3 @@
-import { h } from 'preact';
-
 interface LogsProps {
   logs: string[];
 }
@@ -7,10 +5,8 @@ interface LogsProps {
 export function Logs({ logs }: LogsProps) {
   return (
     <div class="logs">
-      {logs.map((log, index) => (
-        <div key={index} class="log-entry">
-          {log}
-        </div>
+      {logs.slice(-10).map((log: string, index: number) => (
+        <div class="log-entry" key={index}>{log}</div>
       ))}
     </div>
   );

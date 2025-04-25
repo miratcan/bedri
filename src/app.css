@@ -15,7 +15,7 @@
   --c8: #555555;
   --c9: #5555ff;
   --c10: #1fdbdb;
-  --c12: #55ff55;
+  --c11: #55ff55;
   --c12: #ff55ff;
   --c13: #ff5555;
   --c14: #ffff55;
@@ -24,6 +24,13 @@
   --gap: 1rem;
   --fs: 16px;
   --lh: 24px;
+  --scanline: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.02) 0px,
+    rgba(255,255,255,0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
 }
 
 html,
@@ -42,36 +49,61 @@ body {
   font-smooth: never;
   -webkit-font-smoothing: none;
   letter-spacing: -1px;
+  text-transform: uppercase;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  background: var(--scanline);
 }
 
 h1, h2, h3, h4, h5, legend {
   font-size: inherit;
   font-weight: normal;
   color: var(--c14);
+  text-transform: uppercase;
 }
 
 .wrapper {
-  display: grid;
-  grid-template-columns: 1fr 1fr 300px;
-  grid-template-rows: auto auto auto 1fr;
+  display: flex;
+  flex-direction: column;
   gap: var(--gap);
   padding: var(--gap);
   max-width: 1600px;
   margin: 0 auto;
+  background: var(--c1);
+  border: 4px double var(--c7);
+  box-shadow: none;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+
+  align-items: flex-start;
+  gap: var(--gap);
 }
 
-.column {
+.column, .column:last-child {
   flex: 1;
-}
-
-.column:last-child {
-  align-self: flex-start;
+  border: none;
 }
 
 .description {
   grid-column: 1 / 3;
   grid-row: 1;
   margin-bottom: var(--gap);
+  background: var(--c0);
+  border: 2px solid var(--c8);
+  padding: 0.5rem 1rem;
+  color: var(--c12);
+  text-shadow: 1px 1px 0 var(--c8);
 }
 
 .description p {
@@ -86,10 +118,35 @@ h1, h2, h3, h4, h5, legend {
 }
 
 .canvas-container {
-  grid-column: 2;
-  grid-row: 2;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--gap);
+  justify-items: center;
+  align-items: start;
+  background: var(--c0);
+  border: none;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.canvas-container .controls {
+  margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto auto;
+  gap: 1rem;
+  width: 100%;
+}
+
+.canvas-container .controls button {
+  grid-row: 1;
+}
+
+.canvas-container .controls progress {
+  grid-column: 1 / -1;
+  grid-row: 2;
 }
 
 .inputs {
@@ -98,12 +155,15 @@ h1, h2, h3, h4, h5, legend {
   display: grid;
   gap: var(--gap);
   align-content: start;
+  background: var(--c0);
+  border: none;
+  padding: 1rem;
+  flex-basis: 300px;
 }
 
-#dstCanvas {
-  height: auto;
-  border: 2px solid var(--c8);
-  justify-self: start;
+canvas {
+  border: 2px solid var(--c14);
+  background: var(--c0);
 }
 
 .ad-container {
@@ -111,7 +171,7 @@ h1, h2, h3, h4, h5, legend {
   grid-row: 1 / span 4;
   padding: var(--gap);
   background: var(--c3);
-  border: 2px solid var(--c8);
+  border: none;
   display: flex;
   flex-direction: column;
   gap: var(--gap);
@@ -123,15 +183,21 @@ h1, h2, h3, h4, h5, legend {
   padding: 1rem;
   text-align: center;
   color: var(--c7);
-  min-height: 250px;
+  min-height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-transform: uppercase;
 }
 
 .image-upload-container {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--gap);
+  background: var(--c0);
+  border: none;
+  padding: 1rem;
+  align-items: center;
 }
 
 .upload-button {
@@ -141,11 +207,17 @@ h1, h2, h3, h4, h5, legend {
   border: 2px solid var(--c8);
   cursor: pointer;
   text-align: center;
+  text-transform: uppercase;
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+  box-shadow: none;
 }
 
-.upload-button:hover:not(:disabled) {
-  background: var(--c3);
-  color: var(--c15);
+.upload-button:hover:not(:disabled), .upload-button:focus {
+  background: var(--c1);
+  color: var(--c14);
+  border-color: var(--c14);
 }
 
 .preview-container {
@@ -153,9 +225,14 @@ h1, h2, h3, h4, h5, legend {
   gap: var(--gap);
   justify-content: center;
 }
-
+#selectedCanvas {
+  max-width: 200px;
+  max-height: 200px;
+}
 #currentCanvas {
-  border: 2px solid var(--c8);
+  max-height: 60vh;
+  max-width: 80vw;
+  border: 2px solid var(--c14);
   justify-self: center;
   background: var(--c0);
 }
@@ -167,13 +244,14 @@ h1, h2, h3, h4, h5, legend {
   padding: 0.5rem;
   background: var(--c0);
   border: 1px solid var(--c8);
+  text-transform: none;
 }
-
 label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.5rem 0;
   color: var(--c7);
   font-size: var(--fs);
+  text-transform: uppercase;
 }
 
 input, textarea, select, button {
@@ -182,46 +260,42 @@ input, textarea, select, button {
   line-height: inherit;
   background: var(--c0);
   color: var(--c7);
-  border: 2px solid var(--c8);
-  padding: 0.5rem;
+  border: none;
+  border-bottom: 2px solid var(--c8);
+  padding: 0.5rem 0.5rem 0.2rem 0.5rem;
   margin: 0;
   display: block;
   box-sizing: border-box;
   width: 100%;
-}
-
-input:focus, textarea:focus, select:focus {
+  border-radius: 0 !important;
+  box-shadow: none !important;
   outline: none;
+  text-transform: none;
+  transition: border-color 0.2s;
 }
 
-button {
-  background: var(--c0);
-  color: var(--c7);
-  border: 2px solid var(--c8);
-  padding: 0.5rem;
-  cursor: pointer;
-  text-align: center;
+input:focus, textarea:focus, select:focus, button:focus {
+  border-bottom: 2px solid var(--c14);
+  background: var(--c1);
+  color: var(--c14);
 }
 
-button:not(:disabled) {
-  background: var(--c0);
-  color: var(--c7);
+input[type="text"], input[type="number"], textarea {
+  caret-color: var(--c14);
+  position: relative;
+  animation: blink-caret 1s steps(1) infinite;
 }
 
-button:hover:not(:disabled) {
-  background: var(--c3);
-  color: var(--c15);
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+@keyframes blink-caret {
+  0%, 100% { caret-color: var(--c14); }
+  50% { caret-color: transparent; }
 }
 
 input[type="checkbox"], input[type="radio"] {
   width: auto;
   display: inline-block;
   margin-right: 0.5rem;
+  accent-color: var(--c14);
 }
 
 input[type="range"] {
@@ -236,7 +310,8 @@ input[type="range"]::-webkit-slider-thumb {
   width: 12px;
   height: 12px;
   background: var(--c7);
-  border-radius: 50%;
+  border: 2px solid var(--c14);
+  border-radius: 0;
   cursor: pointer;
 }
 
@@ -256,6 +331,8 @@ progress {
   appearance: none;
   background: var(--c0);
   border: 2px solid var(--c8);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 progress::-webkit-progress-bar {
@@ -263,7 +340,7 @@ progress::-webkit-progress-bar {
 }
 
 progress::-webkit-progress-value {
-  background: var(--c7);
+  background: var(--c14);
 }
 
 .control-grid #startButton {
@@ -324,23 +401,28 @@ canvas {
   display: flex;
   align-items: center;
   margin-bottom: 1rem;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .input-wrapper label {
-  min-width: 100px;
   text-align: right;
   margin-bottom: 0;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 90px;
+  padding-right: 0.5rem;
 }
 
 .input-wrapper input,
 .input-wrapper select,
 .input-wrapper textarea {
-  flex: 1;
-  padding: 0.5rem;
-  border: 2px solid var(--c8);
+  flex: 1 1 0%;
+  padding: 0.5rem 0.5rem 0.2rem 0.5rem;
+  border: none;
+  border-bottom: 2px solid var(--c8);
   background: var(--c0);
   color: var(--c7);
+  min-width: 0;
 }
 
 .fieldset-description {
@@ -352,22 +434,27 @@ canvas {
 }
 
 .input-group {
-  border: 2px solid var(--c8);
-  border-radius: 4px;
-  padding: 1.5rem;
+  border: none;
+  padding: 0;
   margin-bottom: 1.5rem;
   background: var(--c0);
+  text-transform: uppercase;
 }
 
 .input-group legend {
-  padding: 0 0.5rem;
+  padding: 0 0 0.5rem 0;
   margin-bottom: 0.5rem;
+  color: var(--c14);
+  text-transform: uppercase;
 }
 
 textarea {
   width: 100%;
   min-height: 100px;
   resize: vertical;
+  border-radius: 0;
+  box-shadow: none;
+  text-transform: none;
 }
 
 .worker-status {
@@ -493,20 +580,26 @@ textarea {
   display: flex;
   gap: 10px;
   margin-top: 20px;
+  border: none;
+  background: none;
+  box-shadow: none;
 }
 
 .controls button {
-  padding: 8px 16px;
   border: none;
-  border-radius: 4px;
-  background-color: #4CAF50;
-  color: white;
+  border-bottom: 2px solid var(--c8);
+  border-radius: 0;
+  background: var(--c0);
+  color: var(--c7);
+  padding: 8px 16px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 
-.controls button:hover {
-  background-color: #45a049;
+.controls button:hover, .controls button:focus {
+  border-bottom: 2px solid var(--c14);
+  background: var(--c1);
+  color: var(--c14);
 }
 
 .controls button:disabled {
@@ -541,49 +634,89 @@ textarea {
 .progress-container {
   grid-column: 2;
   grid-row: 3;
-  background: var(--c3);
-  border: 2px solid var(--c8);
-  padding: var(--gap);
+  border: none;
 }
 
 .progress-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  background: var(--c0);
+  border: none;
+  color: var(--c12);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  box-shadow: none;
 }
 
 .progress-title {
-  margin: 0;
   color: var(--c14);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
 }
 
 .progress-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .progress-label {
-  min-width: 80px;
+  min-width: 100px;
   color: var(--c7);
+  text-transform: uppercase;
 }
 
 .progress-bar-container {
   flex: 1;
-  height: 12px;
-  background: var(--c0);
-  border: 1px solid var(--c8);
+  height: 16px;
+  background: var(--c8);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
 }
 
 .progress-bar {
   height: 100%;
-  background: var(--c7);
-  transition: width 0.3s ease;
+  background: var(--c14);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .progress-stats {
-  min-width: 100px;
-  text-align: right;
+  min-width: 80px;
   color: var(--c7);
+  text-transform: uppercase;
 }
+
+::-webkit-scrollbar {
+  width: 12px;
+  background: var(--c0);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c8);
+  border: 2px solid var(--c14);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c14);
+}
+
+* {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th, table td {
+  padding: 0.5rem;
+  border: 1px solid var(--c8);
+}
+
+
+

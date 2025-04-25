@@ -1,4 +1,4 @@
-import { Width, Height, Candidate, DestinationImage, Options, CurrentImage } from './types';
+import { Width, Height, Candidate, SelectedImage, Options, CurrentImage } from './types';
 
 type CanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -15,13 +15,13 @@ type CanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2
  * of a corresponding pixel in the image, with values ranging from 0 (black)
  * to 255 (white).
  * 
- * @param ctx - The canvas rendering context containing the image
+ * @param testCanvasCtx - The canvas rendering context containing the image
  * @param w - Width of the image
  * @param h - Height of the image
  * @returns A Float32Array containing brightness values for each pixel
  */
-export const calcBrightness = (ctx: CanvasContext, w: Width, h: Height): Float32Array => {
-  const pixelData = ctx.getImageData(0, 0, w, h).data;
+export const calcBrightness = (testCanvasCtx: CanvasContext, w: Width, h: Height): Float32Array => {
+  const pixelData = testCanvasCtx.getImageData(0, 0, w, h).data;
   const totalPixels = w * h;
   const result = new Float32Array(totalPixels);
   for (let i = 0; i < totalPixels; i++) {
@@ -47,15 +47,15 @@ export const randColor = (opacity: number): string => {
 };
 
 
-export const generateCandidate = (destination: DestinationImage, options: Options): Candidate => {
+export const generateCandidate = (selected: SelectedImage, options: Options): Candidate => {
     // Generate a random candidate for text placement
     // This function creates a single candidate with randomized properties
-    // based on the provided options and destination image dimensions.
+    // based on the provided options and selected image dimensions.
     // 
     // The candidate includes:
     // - A randomly selected text block from the options
     // - Font size within the min/max range specified in options
-    // - Random position within the destination image boundaries
+    // - Random position within the selected image boundaries
     // - Random color using randColor function
     // - Random rotation between -π/2 and π/2 radians
     
@@ -65,16 +65,40 @@ export const generateCandidate = (destination: DestinationImage, options: Option
         text: randomText,
         size: Math.random() * (options.font.maxSize - options.font.minSize) + options.font.minSize,
         position: {
-          x: Math.random() * destination.size.width,
-          y: Math.random() * destination.size.height,
+          x: Math.random() * selected.size.width,
+          y: Math.random() * selected.size.height,
         },
         color: randColor(options.font.opacity),
         rotation: Math.random() * Math.PI - Math.PI / 2,
     }
 }
 
-export const generateCandidates = (destination: DestinationImage, options: Options, nofCandidates: number): Candidate[] => {
-    return [...Array(nofCandidates)].map(() => generateCandidate(destination, options));
+export const generateCandidates = (selected: SelectedImage, options: Options, nofCandidates: number): Candidate[] => {
+    return [...Array(nofCandidates)].map(() => generateCandidate(selected, options));
+}
+
+export const renderCandidate = (
+  currentImage: CurrentImage,
+  candidate: Candidate,
+  options: Options,
+  target: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+): void => {
+  // Clear the canvas
+  target.putImageData(currentImage.iData, 0, 0);
+
+  // Set up text rendering
+  const fontWeight = options.font.bold ? 'bold' : 'normal';
+  target.font = `${fontWeight} ${candidate.size}px ${options.font.family}`;
+  target.fillStyle = candidate.color;
+  target.textAlign = 'center';
+  target.textBaseline = 'middle';
+
+  // Apply rotation
+  target.translate(candidate.position.x, candidate.position.y);
+  target.rotate(candidate.rotation);
+  target.fillText(candidate.text, 0, 0);
+  target.rotate(-candidate.rotation);
+  target.translate(-candidate.position.x, -candidate.position.y);
 }
 
 /**
@@ -86,57 +110,29 @@ export const generateCandidates = (destination: DestinationImage, options: Optio
  * A higher score indicates a better match.
  * 
  * @param candidate - The candidate text placement to evaluate
- * @param destinationImage - The source image data to compare against
+ * @param selectedImage - The source image data to compare against
  * @returns The fitness score of the candidate
  */
 export const calcFitness = (
-    currentImage: CurrentImage | undefined,
+    currentImage: CurrentImage,
     candidate: Candidate,
-    destinationImage: DestinationImage,
-    options: Options
+    selectedImage: SelectedImage,
+    options: Options,
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 ): number => {
-    // Create a temporary canvas to render the candidate
-    const canvas = new OffscreenCanvas(destinationImage.size.width, destinationImage.size.height);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return 0;
+    renderCandidate(currentImage, candidate, options, ctx);
 
-    // Clear the canvas
-    if (currentImage) {
-      ctx.putImageData(currentImage.iData, destinationImage.size.width, destinationImage.size.height);
-    } else {
-      ctx.fillStyle = 'black';
-      ctx.clearRect(0, 0, destinationImage.size.width, destinationImage.size.height);
-    }
-
-    // Set up text rendering
-    const fontWeight = options.font.bold ? 'bold' : 'normal';
-    ctx.font = `${fontWeight} ${candidate.size}px ${options.font.family}`;
-    ctx.fillStyle = candidate.color;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // Apply rotation
-    ctx.translate(candidate.position.x, candidate.position.y);
-    ctx.rotate(candidate.rotation);
-    ctx.fillText(candidate.text, 0, 0);
-    ctx.rotate(-candidate.rotation);
-    ctx.translate(-candidate.position.x, -candidate.position.y);
-
-    // Calculate brightness of the rendered text
     const candidateBrightness = calcBrightness(
-      ctx, destinationImage.size.width, destinationImage.size.height
+      ctx, selectedImage.size.width, selectedImage.size.height
     );
 
-    // Calculate mean squared error between candidate and target
     let mse = 0;
-    for (let i = 0; i < destinationImage.bArray.length; i++) {
-        const diff = candidateBrightness[i] - destinationImage.bArray[i];
+    for (let i = 0; i < selectedImage.bArray.length; i++) {
+        const diff = candidateBrightness[i] - selectedImage.bArray[i];
         mse += diff * diff;
     }
-    mse /= destinationImage.bArray.length;
+    mse /= selectedImage.bArray.length;
 
-    // Return inverse of MSE as fitness score (higher is better)
-    // Add a small constant to avoid division by zero
     return 1 / (mse + 0.0001);
 };
 
