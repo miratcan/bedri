@@ -23,6 +23,9 @@ export function Controls({ onStart, onStop, onReset, onDownload, totalProcessed,
         Download
       </button>
       <progress id="progress" value={totalProcessed} max={linesCount} />
+      <div className="generation-progress">
+        Generation: {totalProcessed} / {linesCount}
+      </div>
     </div>
   );
 } 

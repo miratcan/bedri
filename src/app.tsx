@@ -387,45 +387,43 @@ export function App() {
       <div class="description">
         <p>Upload an image and enter text lines. The app will generate a text-based representation of the image using the provided text.</p>
       </div>
-      <div class='row'>
-        <div class="inputs">
-          <ImageUpload
-            selectedCanvasRef={selectedCanvasRef}
-            selectedImage={selectedImage}
-            setSelectedImage={setSelectedImage}
-            setCurrentImage={setCurrentImage}
-          />
-          <TextContent
-            inputValues={inputValues}
-            onInputChange={handleInputChange}
-          />
-          <FontSettings
-            inputValues={inputValues}
-            onInputChange={handleInputChange}
-          />
-          <ProcessingSettings
-            inputValues={inputValues}
-            onInputChange={handleInputChange}
-          />
-        </div>
-        <div class="canvas-container">
-          <canvas ref={currentCanvasRef} id="currentCanvas" />
-          <Controls
-            onStart={startProcessing}
-            onStop={stopProcessing}
-            onReset={reset}
-            onDownload={downloadImage}
-            totalProcessed={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.processed, 0) : 0}
-            linesCount={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.total, 0) : 0}
-          />
-        </div>
-        {/*
+      <div class="inputs">
+        <ImageUpload
+          selectedCanvasRef={selectedCanvasRef}
+          selectedImage={selectedImage}
+          setSelectedImage={setSelectedImage}
+          setCurrentImage={setCurrentImage}
+        />
+        <TextContent
+          inputValues={inputValues}
+          onInputChange={handleInputChange}
+        />
+        <FontSettings
+          inputValues={inputValues}
+          onInputChange={handleInputChange}
+        />
+        <ProcessingSettings
+          inputValues={inputValues}
+          onInputChange={handleInputChange}
+        />
+      </div>
+      <div class="canvas-container">
+        <canvas ref={currentCanvasRef} id="currentCanvas" />
+        <Controls
+          onStart={startProcessing}
+          onStop={stopProcessing}
+          onReset={reset}
+          onDownload={downloadImage}
+          totalProcessed={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.processed, 0) : 0}
+          linesCount={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.total, 0) : 0}
+        />
+      </div>
+      {/*
         <div class="progress-container">
           {processStats && <ProgressPanel currentGeneration={currentGeneration} processStats={processStats} />}
         </div>
         */}
 
-      </div>
     </div>
   );
 }
