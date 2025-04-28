@@ -1,3 +1,5 @@
+import { ChangeEvent } from 'react';
+
 interface ShadowSettingsProps {
   inputValues: {
     font: {
@@ -10,16 +12,16 @@ interface ShadowSettingsProps {
       };
     };
   };
-  onInputChange: (e: Event) => void;
+  onInputChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 }
 
 export function ShadowSettings({ inputValues, onInputChange }: ShadowSettingsProps) {
   return (
-    <fieldset class="input-group">
+    <fieldset className="input-group">
       <legend>Shadow Settings</legend>
-      <p class="fieldset-description">Add depth to your text with shadow effects. Enable shadows and adjust their appearance with color, blur, and offset settings.</p>
-      <div class="input-wrapper">
-        <label for="shadowEnabledInput">Enabled</label>
+      <p className="fieldset-description">Add depth to your text with shadow effects. Enable shadows and adjust their appearance with color, blur, and offset settings.</p>
+      <div className="input-wrapper">
+        <label htmlFor="shadowEnabledInput">Enabled</label>
         <select
           name="font.shadow.enabled"
           value={inputValues.font.shadow.enabled}
@@ -31,8 +33,8 @@ export function ShadowSettings({ inputValues, onInputChange }: ShadowSettingsPro
         </select>
       </div>
 
-      <div class="input-wrapper">
-        <label for="shadowColorInput">Color</label>
+      <div className="input-wrapper">
+        <label htmlFor="shadowColorInput">Color</label>
         <input
           type="color"
           name="font.shadow.color"
@@ -42,8 +44,8 @@ export function ShadowSettings({ inputValues, onInputChange }: ShadowSettingsPro
         />
       </div>
 
-      <div class="input-wrapper">
-        <label for="shadowBlurInput">Blur</label>
+      <div className="input-wrapper">
+        <label htmlFor="shadowBlurInput">Blur</label>
         <input
           type="number"
           name="font.shadow.blur"
@@ -54,8 +56,8 @@ export function ShadowSettings({ inputValues, onInputChange }: ShadowSettingsPro
         />
       </div>
 
-      <div class="input-wrapper">
-        <label for="shadowOffsetXInput">Offset X</label>
+      <div className="input-wrapper">
+        <label htmlFor="shadowOffsetXInput">Offset X</label>
         <input
           type="number"
           name="font.shadow.offsetX"
@@ -66,8 +68,8 @@ export function ShadowSettings({ inputValues, onInputChange }: ShadowSettingsPro
         />
       </div>
 
-      <div class="input-wrapper">
-        <label for="shadowOffsetYInput">Offset Y</label>
+      <div className="input-wrapper">
+        <label htmlFor="shadowOffsetYInput">Offset Y</label>
         <input
           type="number"
           name="font.shadow.offsetY"

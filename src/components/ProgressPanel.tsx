@@ -7,10 +7,10 @@ interface ProgressPanelProps {
 
 export function ProgressPanel({ currentGeneration, processStats }: ProgressPanelProps) {
   return (
-    <div class="progress-panel">
-      <h3 class="progress-title">Processing Status</h3>
+    <div className="progress-panel">
+      <h3 className="progress-title">Processing Status</h3>
       <p>Generation: {currentGeneration}</p>
-      <table class="progress-table">
+      <table className="progress-table">
         <thead>
           <tr>
             <th>Worker</th>

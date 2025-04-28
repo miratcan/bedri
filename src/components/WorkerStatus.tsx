@@ -7,22 +7,22 @@ interface WorkerStatusProps {
 
 const WorkerStatus = ({ activeWorkers, totalWorkers, totalProcessed, linesCount }: WorkerStatusProps) => {
   return (
-    <div class="worker-status">
-      <div class="worker-status-header">
+    <div className="worker-status">
+      <div className="worker-status-header">
         <h3>Worker Status</h3>
-        <div class="progress-info">
+        <div className="progress-info">
           {totalProcessed} / {linesCount} lines processed
         </div>
       </div>
-      <div class="worker-indicators">
+      <div className="worker-indicators">
         {Array.from({ length: totalWorkers }).map((_, index) => (
           <div 
-            class={`worker-indicator ${index < activeWorkers ? 'active' : ''}`}
+            className={`worker-indicator ${index < activeWorkers ? 'active' : ''}`}
             title={`Worker ${index + 1} - ${index < activeWorkers ? 'Processing' : 'Idle'}`}
           >
-            <div class="worker-icon">[ ]</div>
-            <div class="worker-number">Worker {index + 1}</div>
-            <div class="worker-status-text">{index < activeWorkers ? 'Processing' : 'Idle'}</div>
+            <div className="worker-icon">[ ]</div>
+            <div className="worker-number">Worker {index + 1}</div>
+            <div className="worker-status-text">{index < activeWorkers ? 'Processing' : 'Idle'}</div>
           </div>
         ))}
       </div>

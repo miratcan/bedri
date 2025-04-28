@@ -116,7 +116,7 @@ export function ImageUpload({
         height={selectedImage?.size.height || 100}
       />
       {selectedImage && (
-        <div class="image-info">
+        <div className="image-info">
           <div>Dimensions: {selectedImage.size.width}x{selectedImage.size.height}px</div>
         </div>
       )}

@@ -1,6 +1,6 @@
 import { Button, Toolbar } from 'react95';
 import styled from 'styled-components';
-import { StyledProgress } from '../App';
+import { StyledProgress } from './shared';
 
 const ControlsContainer = styled.div`
   display: flex;

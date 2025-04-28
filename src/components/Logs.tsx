@@ -4,9 +4,9 @@ interface LogsProps {
 
 export function Logs({ logs }: LogsProps) {
   return (
-    <div class="logs">
+    <div className="logs">
       {logs.slice(-10).map((log: string, index: number) => (
-        <div class="log-entry" key={index}>{log}</div>
+        <div className="log-entry" key={index}>{log}</div>
       ))}
     </div>
   );

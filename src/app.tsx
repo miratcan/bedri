@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
-import { Window, WindowHeader, WindowContent, Button, Fieldset, TextField, Select, Checkbox, Toolbar } from 'react95';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Window, WindowContent, WindowHeader } from 'react95';
 import styled from 'styled-components';
+import { Controls } from './components/Controls';
 import { FontSettings } from './components/FontSettings';
 import { ImageUpload } from './components/ImageUpload';
 import { ProcessingSettings } from './components/ProcessingSettings';
 import { TextContent } from './components/TextContent';
 import { DEFAULT_BLOCKS, MAX_ACTIVE_WORKERS } from './constants';
-import { Options, SelectedImage, WorkerMessage, WorkerProcessStats, Candidate, UpdateMessage, BaseMessage, DoneMessage, CurrentImage } from './types';
-import { Controls } from './components/Controls';
 import { renderCandidate } from './helpers';
+import { BaseMessage, Candidate, CurrentImage, DoneMessage, Options, SelectedImage, UpdateMessage, WorkerMessage, WorkerProcessStats } from './types';
 
 const Wrapper = styled.div`
   display: flex;
@@ -105,6 +105,24 @@ export const StyledProgress = styled.progress`
 
   &::-moz-progress-bar {
     background: #000080;
+  }
+`;
+
+export const StyledFieldset = styled.div<{ label?: string }>`
+  border: 2px solid #000000;
+  padding: 10px;
+  margin: 10px 0;
+  background: #c0c0c0;
+  position: relative;
+
+  &::before {
+    content: "${props => props.label || ''}";
+    position: absolute;
+    top: -20px;
+    left: 10px;
+    background: #c0c0c0;
+    padding: 0 5px;
+    font-size: 14px;
   }
 `;
 
