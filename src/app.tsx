@@ -216,7 +216,7 @@ export function App() {
     if (currentCanvasRef.current) {
       const link = document.createElement("a");
       link.href = currentCanvasRef.current.toDataURL("image/png");
-      link.download = "textdraw.png";
+      link.download = "bedri.png";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

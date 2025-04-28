@@ -3,6 +3,6 @@ import preact from '@preact/preset-vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/textdraw/',
+  base: '/bedri/',
   plugins: [preact()],
 })
