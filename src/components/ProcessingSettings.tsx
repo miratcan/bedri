@@ -1,39 +1,61 @@
+import { Fieldset, TextField } from 'react95';
+import styled from 'styled-components';
+
+const InputWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+`;
+
+const Label = styled.label`
+  font-size: 12px;
+  color: #000000;
+`;
+
+const Description = styled.p`
+  font-size: 12px;
+  color: #000000;
+  margin-bottom: 10px;
+`;
+
 interface ProcessingSettingsProps {
   inputValues: {
     iterations: number;
     generations: number;
   };
-  onInputChange: (e: Event) => void;
+  onTextInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
-export function ProcessingSettings({ inputValues, onInputChange }: ProcessingSettingsProps) {
+export function ProcessingSettings({ inputValues, onTextInputChange }: ProcessingSettingsProps) {
   return (
-    <fieldset class="input-group">
-      <legend>Processing Settings</legend>
-      <p class="fieldset-description">Control how the genetic algorithm works. More iterations will find better placements for each text block, while more generations will add more text blocks to the final image.</p>
-      <div class="input-wrapper">
-        <label for="iterationsInput">Iterations</label>
-        <input
+    <Fieldset label="Processing Settings">
+      <Description>
+        Control how the genetic algorithm works. More iterations will find better placements for each text block, while more generations will add more text blocks to the final image.
+      </Description>
+      <InputWrapper>
+        <Label htmlFor="iterationsInput">Iterations</Label>
+        <TextField
           type="number"
           name="iterations"
           value={inputValues.iterations}
-          onChange={onInputChange}
+          onChange={onTextInputChange}
           placeholder="Iterations"
           id="iterationsInput"
         />
-      </div>
+      </InputWrapper>
 
-      <div class="input-wrapper">
-        <label for="generationsInput">Generations</label>
-        <input
+      <InputWrapper>
+        <Label htmlFor="generationsInput">Generations</Label>
+        <TextField
           type="number"
           name="generations"
           value={inputValues.generations}
-          onChange={onInputChange}
+          onChange={onTextInputChange}
           placeholder="Number of generations"
           id="generationsInput"
         />
-      </div>
-    </fieldset>
+      </InputWrapper>
+    </Fieldset>
   );
 } 

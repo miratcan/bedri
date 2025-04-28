@@ -1,8 +1,22 @@
-import { RefObject } from 'preact';
+import { RefObject } from 'react';
+import { Button, Fieldset } from 'react95';
+import styled from 'styled-components';
 
 import { MAX_PIXEL_SIZE } from '../constants';
 import { CurrentImage, SelectedImage } from '../types';
 import { calcBrightness } from '../helpers';
+
+const ImageUploadContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const StyledCanvas = styled.canvas`
+  width: 100%;
+  height: auto;
+  background: white;
+`;
 
 interface ImageUploadProps {
   selectedCanvasRef: RefObject<HTMLCanvasElement>;
@@ -60,8 +74,8 @@ export function ImageUpload({
     setCurrentImage(_current);
   };
 
-  const handleImageChange = (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
@@ -79,21 +93,23 @@ export function ImageUpload({
   };
 
   return (
-    <div class="image-upload-container">
-      <input
-        type="file"
-        onChange={handleImageChange}
-        accept="image/*"
-        id="fileInput"
-        style="display: none"
-      />
-      <button 
-        onClick={() => document.getElementById('fileInput')?.click()}
-        class="upload-button"
-      >
-        {selectedImage ? 'Change Image' : 'Select Image'}
-      </button>
-      <canvas 
+    <ImageUploadContainer>
+      <Fieldset label="Image Upload">
+        <input
+          type="file"
+          onChange={handleImageChange}
+          accept="image/*"
+          id="fileInput"
+          style={{ display: 'none' }}
+        />
+        <Button 
+          onClick={() => document.getElementById('fileInput')?.click()}
+          primary
+        >
+          {selectedImage ? 'Change Image' : 'Select Image'}
+        </Button>
+      </Fieldset>
+      <StyledCanvas 
         ref={selectedCanvasRef}
         id="selectedCanvas" 
         width={selectedImage?.size.width || 100} 
@@ -104,6 +120,6 @@ export function ImageUpload({
           <div>Dimensions: {selectedImage.size.width}x{selectedImage.size.height}px</div>
         </div>
       )}
-    </div>
+    </ImageUploadContainer>
   );
 } 

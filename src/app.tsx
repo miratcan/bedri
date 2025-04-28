@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, useMemo } from 'preact/hooks';
-import './app.css';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import { Window, WindowHeader, WindowContent, Button, Fieldset, TextField, Select, Checkbox, Toolbar } from 'react95';
+import styled from 'styled-components';
 import { FontSettings } from './components/FontSettings';
 import { ImageUpload } from './components/ImageUpload';
 import { ProcessingSettings } from './components/ProcessingSettings';
@@ -8,6 +9,104 @@ import { DEFAULT_BLOCKS, MAX_ACTIVE_WORKERS } from './constants';
 import { Options, SelectedImage, WorkerMessage, WorkerProcessStats, Candidate, UpdateMessage, BaseMessage, DoneMessage, CurrentImage } from './types';
 import { Controls } from './components/Controls';
 import { renderCandidate } from './helpers';
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: #008080;
+  min-height: 100vh;
+  gap: 20px;
+`;
+
+const MainContent = styled.div`
+  display: flex;
+  gap: 20px;
+  flex: 1;
+`;
+
+const InputsContainer = styled.div`
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const CanvasContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: sticky;
+  top: 20px;
+  align-self: flex-start;
+`;
+
+const StyledWindow = styled(Window)`
+  width: 100%;
+`;
+
+const StyledCanvas = styled.canvas`
+  width: 100%;
+  height: auto;
+  background: white;
+`;
+
+const List = styled.ul`
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+`;
+
+const ListItem = styled.li`
+  margin-bottom: 12px;
+  line-height: 1.4;
+  color: #000000;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  a {
+    color: #0000FF;
+    text-decoration: underline;
+    font-weight: bold;
+    
+    &:hover {
+      color: #FF0000;
+      text-decoration: none;
+    }
+    
+    &:active {
+      color: #FF0000;
+      text-decoration: underline;
+    }
+  }
+`;
+
+export const StyledProgress = styled.progress`
+  width: 100%;
+  height: 20px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: #c0c0c0;
+  border: 2px solid #000000;
+  border-radius: 0;
+  box-shadow: none;
+
+  &::-webkit-progress-bar {
+    background: #c0c0c0;
+  }
+
+  &::-webkit-progress-value {
+    background: #000080;
+  }
+
+  &::-moz-progress-bar {
+    background: #000080;
+  }
+`;
 
 export function App() {
   const [inputValues, setInputValues] = useState({
@@ -32,7 +131,7 @@ export function App() {
   });
   const [processing, setProcessing] = useState(false);
   const [currentGeneration, setCurrentGeneration] = useState<number>(0);
-  const [processStats, setProcessStats] = useState<WorkerProcessStats>();
+  const [processStats, setProcessStats] = useState<WorkerProcessStats>({});
   const [champions, setChampions] = useState<Record<number, Candidate>>({});
   const [currentImage, setCurrentImage] = useState<CurrentImage | null>(null);
   const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(null);
@@ -164,8 +263,8 @@ export function App() {
     }
   }, [selectedImage]);
 
-  const handleInputChange = (e: Event) => {
-    const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+  const handleTextInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const target = e.target;
     const value = target.type === 'number' ? Number(target.value) : target.value;
     const [, subsection, field] = target.name.split('.');
 
@@ -174,7 +273,10 @@ export function App() {
         ...prev,
         font: {
           ...prev.font,
-          [subsection]: value
+          [subsection]: {
+            ...(prev.font[subsection as keyof typeof prev.font] as Record<string, any>),
+            [field]: value
+          }
         }
       }));
     } else if (subsection) {
@@ -193,24 +295,48 @@ export function App() {
     }
   };
 
-  const options = useMemo((): Options => {
-    const blocks = inputValues.useType === 'words'
-      ? inputValues.blocks.trim().split(/\s+/)
-      : inputValues.blocks.trim().split(/\n+/);
+  const handleSelectChange = (name: string, value: string) => {
+    const [, subsection, field] = name.split('.');
 
-    return {
-      blocks,
-      font: {
-        family: inputValues.font.family,
-        minSize: parseInt(inputValues.font.minSize),
-        maxSize: parseInt(inputValues.font.maxSize),
-        opacity: parseFloat(inputValues.font.opacity),
-        bold: inputValues.font.bold === 'true',
-      },
-      iterations: inputValues.iterations,
-      generations: inputValues.generations
-    };
-  }, [inputValues]);
+    if (subsection && field) {
+      setInputValues(prev => ({
+        ...prev,
+        font: {
+          ...prev.font,
+          [subsection]: {
+            ...(prev.font[subsection as keyof typeof prev.font] as Record<string, any>),
+            [field]: value
+          }
+        }
+      }));
+    } else if (subsection) {
+      setInputValues(prev => ({
+        ...prev,
+        font: {
+          ...prev.font,
+          [subsection]: value
+        }
+      }));
+    } else {
+      setInputValues(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const options = useMemo<Options>(() => ({
+    blocks: inputValues.blocks.split('\n').filter(block => block.trim() !== ''),
+    font: {
+      family: inputValues.font.family,
+      minSize: Number(inputValues.font.minSize),
+      maxSize: Number(inputValues.font.maxSize),
+      opacity: Number(inputValues.font.opacity),
+      bold: inputValues.font.bold === 'true',
+    },
+    iterations: inputValues.iterations,
+    generations: inputValues.generations
+  }), [inputValues]);
 
   const downloadImage = () => {
     if (currentCanvasRef.current) {
@@ -256,16 +382,13 @@ export function App() {
           switch (action) {
             case 'ready':
               // console.log(`Arena ${workerId} initialized and ready.`);
-              setProcessStats(prevState => {
-                const old = prevState ?? {};
-                return {
-                  ...old,
-                  [workerId]: {
-                    total: 0,
-                    processed: 0
-                  }
-                };
-              });
+              setProcessStats(prevState => ({
+                ...(prevState || {}),
+                [workerId]: {
+                  total: 0,
+                  processed: 0
+                }
+              }));
               break;
             case 'initialized':
               if (!processing) {
@@ -278,16 +401,13 @@ export function App() {
               break;
             case 'update':
               const updateMessage = e.data as UpdateMessage & BaseMessage;
-              setProcessStats(prevState => {
-                const old = prevState ?? {};
-                return {
-                  ...old,
-                  [workerId]: {
-                    total: updateMessage.total,
-                    processed: updateMessage.processed
-                  }
-                };
-              });
+              setProcessStats(prevState => ({
+                ...(prevState || {}),
+                [workerId]: {
+                  total: updateMessage.total,
+                  processed: updateMessage.processed
+                }
+              }));
               break;
             case 'done':
               const doneMessage = e.data as DoneMessage & BaseMessage;
@@ -369,61 +489,116 @@ export function App() {
   };
 
   const reset = () => {
-    // console.log("Reset requested - clearing canvas");
     setProcessing(false);
     setCurrentGeneration(0);
-    setProcessStats(undefined);
+    setProcessStats({});
     setChampions({});
-    if (selectedCanvasRef.current) {
-      const ctx = selectedCanvasRef.current.getContext('2d', { willReadFrequently: true });
-      if (ctx) {
-        ctx.clearRect(0, 0, selectedCanvasRef.current.width, selectedCanvasRef.current.height);
-      }
-    }
+    setCurrentImage(null);
+    workersRef.current.forEach(worker => {
+      worker.terminate();
+    });
+    initializeWorkerPool();
   };
 
   return (
-    <div class="wrapper">
-      <div class="description">
-        <p>Upload an image and enter text lines. The app will generate a text-based representation of the image using the provided text.</p>
-      </div>
-      <div class="inputs">
-        <ImageUpload
-          selectedCanvasRef={selectedCanvasRef}
-          selectedImage={selectedImage}
-          setSelectedImage={setSelectedImage}
-          setCurrentImage={setCurrentImage}
-        />
-        <TextContent
-          inputValues={inputValues}
-          onInputChange={handleInputChange}
-        />
-        <FontSettings
-          inputValues={inputValues}
-          onInputChange={handleInputChange}
-        />
-        <ProcessingSettings
-          inputValues={inputValues}
-          onInputChange={handleInputChange}
-        />
-      </div>
-      <div class="canvas-container">
-        <canvas ref={currentCanvasRef} id="currentCanvas" />
-        <Controls
-          onStart={startProcessing}
-          onStop={stopProcessing}
-          onReset={reset}
-          onDownload={downloadImage}
-          totalProcessed={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.processed, 0) : 0}
-          linesCount={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.total, 0) : 0}
-        />
-      </div>
-      {/*
-        <div class="progress-container">
-          {processStats && <ProgressPanel currentGeneration={currentGeneration} processStats={processStats} />}
-        </div>
-        */}
+    <Wrapper>
+      <StyledWindow>
+        <WindowHeader>
+          <span>Bedri</span>
+        </WindowHeader>
+        <WindowContent>
+          <List>
+            <ListItem>Bedri will generate a text-based representation of the image using the provided text by using genetic algorithms. The name is inspired by the famous painter Bedri Baykam.</ListItem>
+            <ListItem>The app is tested with google chrome and might not work with other browsers. Also, mobile devices are not supported.</ListItem>
+            <ListItem>The app is open source and the code is available on <a target="_blank" rel="noopener noreferrer" href="https://github.com/miratcan/bedri">GitHub</a>. If you have any feedback, please <a target="_blank" rel="noopener noreferrer" href="https://github.com/miratcan/bedri/issues">open an issue</a>.</ListItem>
+            <ListItem>This app will use all of your CPU cores to generate the image. It can drain your battery quickly if you are using a laptop.</ListItem>
+            <ListItem>How to use: select an image and enter text lines. Then click on the "Start" button to begin the genetic algorithm. Tweak the options to get better results.</ListItem>
+            <ListItem>You can find inspiration from twitter by searching for <a target="_blank" rel="noopener noreferrer" href={`https://x.com/search?q=${encodeURIComponent('#bedriapp')}`}>#bedriapp</a>. Also please post your results with the hashtag <a target="_blank" rel="noopener noreferrer" href={`https://x.com/search?q=${encodeURIComponent('#bedriapp')}`}>#bedriapp</a>.</ListItem>
+          </List>
+        </WindowContent>
+      </StyledWindow>
 
-    </div>
+      <MainContent>
+        <InputsContainer>
+          <StyledWindow>
+            <WindowHeader>
+              <span>Image Selection</span>
+            </WindowHeader>
+            <WindowContent>
+              <ImageUpload
+                selectedCanvasRef={selectedCanvasRef}
+                selectedImage={selectedImage}
+                setSelectedImage={setSelectedImage}
+                setCurrentImage={setCurrentImage}
+              />
+            </WindowContent>
+          </StyledWindow>
+
+          <StyledWindow>
+            <WindowHeader>
+              <span>Text Content</span>
+            </WindowHeader>
+            <WindowContent>
+              <TextContent
+                inputValues={inputValues}
+                onTextInputChange={handleTextInputChange}
+                onSelectChange={handleSelectChange}
+              />
+            </WindowContent>
+          </StyledWindow>
+          <StyledWindow>
+            <WindowHeader>
+              <span>Font Settings</span>
+            </WindowHeader>
+            <WindowContent>
+              <FontSettings
+                inputValues={inputValues}
+                onTextInputChange={handleTextInputChange}
+                onSelectChange={handleSelectChange}
+              />
+            </WindowContent>
+          </StyledWindow>
+
+          <StyledWindow>
+            <WindowHeader>
+              <span>Processing Settings</span>
+            </WindowHeader>
+            <WindowContent>
+              <ProcessingSettings
+                inputValues={inputValues}
+                onTextInputChange={handleTextInputChange}
+              />
+            </WindowContent>
+          </StyledWindow>
+        </InputsContainer>
+
+        <CanvasContainer>
+          <StyledWindow>
+            <WindowHeader>
+              <span>Preview</span>
+            </WindowHeader>
+            <WindowContent>
+              <StyledCanvas ref={currentCanvasRef} id="currentCanvas" />
+            </WindowContent>
+          </StyledWindow>
+
+          <StyledWindow>
+            <WindowHeader>
+              <span>Controls</span>
+            </WindowHeader>
+            <WindowContent>
+              <Controls
+                onStart={startProcessing}
+                onStop={stopProcessing}
+                onReset={reset}
+                onDownload={downloadImage}
+                totalProcessed={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.processed, 0) : 0}
+                linesCount={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.total, 0) : 0}
+              />
+            </WindowContent>
+          </StyledWindow>
+        </CanvasContainer>
+      </MainContent>
+    </Wrapper>
   );
 }
