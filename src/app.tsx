@@ -310,7 +310,9 @@ export function App() {
   };
 
   const options = useMemo<Options>(() => ({
-    blocks: inputValues.blocks.split('\n').filter(block => block.trim() !== ''),
+    blocks: inputValues.useType === 'words' 
+      ? inputValues.blocks.split(/\s+/).filter(block => block.trim() !== '')
+      : inputValues.blocks.split('\n').filter(block => block.trim() !== ''),
     font: {
       family: inputValues.font.family,
       minSize: Number(inputValues.font.minSize),
