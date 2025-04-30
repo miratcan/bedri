@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Window, WindowContent, WindowHeader } from 'react95';
+import { WindowContent, WindowHeader } from 'react95';
 import styled from 'styled-components';
 import { Controls } from './components/Controls';
 import { FontSettings } from './components/FontSettings';
@@ -9,7 +9,7 @@ import { TextContent } from './components/TextContent';
 import { DEFAULT_BLOCKS, MAX_ACTIVE_WORKERS } from './constants';
 import { renderCandidate } from './helpers';
 import { BaseMessage, Candidate, CurrentImage, DoneMessage, Options, SelectedImage, UpdateMessage, WorkerMessage, WorkerProcessStats } from './types';
-import { StyledCanvas, StyledProgress, StyledWindow } from './components/StyledComponents';
+import { StyledCanvas, StyledWindow } from './components/StyledComponents';
 import './index.css';
 
 const Wrapper = styled.div`
