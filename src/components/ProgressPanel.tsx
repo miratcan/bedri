@@ -9,7 +9,7 @@ export function ProgressPanel({ currentGeneration, processStats }: ProgressPanel
   return (
     <div className="progress-panel">
       <h3 className="progress-title">Processing Status</h3>
-      <p>Generation: {currentGeneration}</p>
+      <p>Candidate: {currentGeneration}</p>
       <table className="progress-table">
         <thead>
           <tr>

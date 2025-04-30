@@ -155,5 +155,16 @@ export type WorkerMessage =
   | (ErrorMessage & BaseMessage)
   | (InitializedMessage & BaseMessage);
 
+declare global {
+  interface Window {
+    queryLocalFonts: () => Promise<Array<{
+      family: string;
+      fullName: string;
+      postscriptName: string;
+      style: string;
+    }>>;
+  }
+}
+
 
 

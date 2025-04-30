@@ -1,25 +1,7 @@
 import { Fieldset, Select, TextField, Checkbox } from 'react95';
-import styled from 'styled-components';
-
-import { FONT_FAMILIES } from '../constants';
-
-const InputWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-bottom: 10px;
-`;
-
-const Label = styled.label`
-  font-size: 12px;
-  color: #000000;
-`;
-
-const Description = styled.p`
-  font-size: 12px;
-  color: #000000;
-  margin-bottom: 10px;
-`;
+import { InputWrapper, Label, Description } from './StyledComponents';
+import { useState } from 'react';
+import { WEB_SAFE_FONTS } from '../constants';
 
 interface FontSettingsProps {
   inputValues: {
@@ -43,6 +25,29 @@ interface FontSettingsProps {
 }
 
 export function FontSettings({ inputValues, onTextInputChange, onSelectChange }: FontSettingsProps) {
+  const [availableFonts, setAvailableFonts] = useState<string[]>(WEB_SAFE_FONTS);
+  const [hasAttemptedLocalFonts, setHasAttemptedLocalFonts] = useState(false);
+
+  const loadLocalFonts = async () => {
+    if (hasAttemptedLocalFonts) return;
+    
+    try {
+      const fonts = await window.queryLocalFonts();
+      const fontFamilies = new Set<string>(WEB_SAFE_FONTS);
+      
+      for (const font of fonts) {
+        fontFamilies.add(font.family);
+      }
+      
+      setAvailableFonts(Array.from(fontFamilies).sort());
+    } catch (error) {
+      console.error('Error loading fonts:', error);
+      // Keep using web-safe fonts if there's an error
+    } finally {
+      setHasAttemptedLocalFonts(true);
+    }
+  };
+
   return (
     <Fieldset label="Font Settings">
       <Description>
@@ -53,9 +58,12 @@ export function FontSettings({ inputValues, onTextInputChange, onSelectChange }:
         <Select
           name="font.family"
           value={inputValues.font.family}
-          onChange={(selectedOption) => onSelectChange('font.family', selectedOption.value)}
+          onChange={(selectedOption) => {
+            onSelectChange('font.family', selectedOption.value);
+            loadLocalFonts(); // Attempt to load local fonts when user selects a font
+          }}
           id="fontFamilyInput"
-          options={FONT_FAMILIES.map(font => ({
+          options={availableFonts.map(font => ({
             value: font,
             label: font
           }))}

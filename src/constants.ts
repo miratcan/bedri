@@ -1,15 +1,16 @@
 export const MAX_PIXEL_SIZE = 1000000;
 export const MAX_ACTIVE_WORKERS = navigator.hardwareConcurrency || 4;
 
-export const FONT_FAMILIES = [
+export const WEB_SAFE_FONTS = [
   'Arial',
-  'Times New Roman',
-  'Courier New',
-  'Georgia',
   'Verdana',
-  'Helvetica',
-  'Impact',
-  'Comic Sans MS'
+  'Tahoma',
+  'Trebuchet MS',
+  'Times New Roman',
+  'Georgia',
+  'Garamond',
+  'Courier New',
+  'Brush Script MT'
 ];
 
 export const USE_TYPES = [

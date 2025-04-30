@@ -1,23 +1,5 @@
 import { Fieldset, TextField } from 'react95';
-import styled from 'styled-components';
-
-const InputWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-bottom: 10px;
-`;
-
-const Label = styled.label`
-  font-size: 12px;
-  color: #000000;
-`;
-
-const Description = styled.p`
-  font-size: 12px;
-  color: #000000;
-  margin-bottom: 10px;
-`;
+import { InputWrapper, Label, Description } from './StyledComponents';
 
 interface ProcessingSettingsProps {
   inputValues: {
@@ -52,7 +34,7 @@ export function ProcessingSettings({ inputValues, onTextInputChange }: Processin
           name="generations"
           value={inputValues.generations}
           onChange={onTextInputChange}
-          placeholder="Number of generations"
+          placeholder="Generations"
           id="generationsInput"
         />
       </InputWrapper>

@@ -1,6 +1,6 @@
 import { Button, Toolbar } from 'react95';
 import styled from 'styled-components';
-import { StyledProgress } from './shared';
+import { StyledProgress } from './StyledComponents';
 
 const ControlsContainer = styled.div`
   display: flex;
@@ -15,8 +15,8 @@ const ProgressContainer = styled.div`
   margin-top: 10px;
 `;
 
-const GenerationProgress = styled.div`
-  font-size: 12px;
+const Progress = styled.div`
+  font-size: inherit;
   color: #000000;
 `;
 
@@ -25,11 +25,13 @@ interface ControlsProps {
   onStop: () => void;
   onReset: () => void;
   onDownload: () => void;
-  totalProcessed: number;
-  linesCount: number;
+  testedCandidates: number;
+  totalCandidates: number;
+  currentGeneration: number;
+  totalGenerations: number;
 }
 
-export function Controls({ onStart, onStop, onReset, onDownload, totalProcessed, linesCount }: ControlsProps) {
+export function Controls({ onStart, onStop, onReset, onDownload, testedCandidates, totalCandidates, currentGeneration, totalGenerations }: ControlsProps) {
   return (
     <ControlsContainer>
       <Toolbar>
@@ -47,10 +49,14 @@ export function Controls({ onStart, onStop, onReset, onDownload, totalProcessed,
         </Button>
       </Toolbar>
       <ProgressContainer>
-        <StyledProgress value={totalProcessed} max={linesCount} />
-        <GenerationProgress>
-          Generation: {totalProcessed} / {linesCount}
-        </GenerationProgress>
+        <StyledProgress value={testedCandidates} max={totalCandidates} />
+        <Progress>
+          Candidates Tested: {testedCandidates} / {totalCandidates}
+        </Progress>
+        <StyledProgress value={currentGeneration} max={totalGenerations} />
+        <Progress>
+          Generations Passed: {currentGeneration} / {totalGenerations}
+        </Progress>
       </ProgressContainer>
     </ControlsContainer>
   );

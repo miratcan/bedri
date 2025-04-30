@@ -9,27 +9,42 @@ import { TextContent } from './components/TextContent';
 import { DEFAULT_BLOCKS, MAX_ACTIVE_WORKERS } from './constants';
 import { renderCandidate } from './helpers';
 import { BaseMessage, Candidate, CurrentImage, DoneMessage, Options, SelectedImage, UpdateMessage, WorkerMessage, WorkerProcessStats } from './types';
+import { StyledCanvas, StyledProgress, StyledWindow } from './components/StyledComponents';
+import './index.css';
 
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
   padding: 20px;
-  background: #008080;
   min-height: 100vh;
-  gap: 20px;
+  width: 1040px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const MainContent = styled.div`
   display: flex;
-  gap: 20px;
   flex: 1;
+  gap: 20px;
+  margin-top: 20px;
+  width: 100%;
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
 const InputsContainer = styled.div`
-  width: 400px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 400px;
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const CanvasContainer = styled.div`
@@ -40,16 +55,9 @@ const CanvasContainer = styled.div`
   position: sticky;
   top: 20px;
   align-self: flex-start;
-`;
-
-const StyledWindow = styled(Window)`
-  width: 100%;
-`;
-
-const StyledCanvas = styled.canvas`
-  width: 100%;
-  height: auto;
-  background: white;
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const List = styled.ul`
@@ -81,48 +89,6 @@ const ListItem = styled.li`
       color: #FF0000;
       text-decoration: underline;
     }
-  }
-`;
-
-export const StyledProgress = styled.progress`
-  width: 100%;
-  height: 20px;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background: #c0c0c0;
-  border: 2px solid #000000;
-  border-radius: 0;
-  box-shadow: none;
-
-  &::-webkit-progress-bar {
-    background: #c0c0c0;
-  }
-
-  &::-webkit-progress-value {
-    background: #000080;
-  }
-
-  &::-moz-progress-bar {
-    background: #000080;
-  }
-`;
-
-export const StyledFieldset = styled.div<{ label?: string }>`
-  border: 2px solid #000000;
-  padding: 10px;
-  margin: 10px 0;
-  background: #c0c0c0;
-  position: relative;
-
-  &::before {
-    content: "${props => props.label || ''}";
-    position: absolute;
-    top: -20px;
-    left: 10px;
-    background: #c0c0c0;
-    padding: 0 5px;
-    font-size: 14px;
   }
 `;
 
@@ -527,9 +493,9 @@ export function App() {
         <WindowContent>
           <List>
             <ListItem>Bedri will generate a text-based representation of the image using the provided text by using genetic algorithms. The name is inspired by the famous painter Bedri Baykam.</ListItem>
-            <ListItem>The app is tested with google chrome and might not work with other browsers. Also, mobile devices are not supported.</ListItem>
+            <ListItem>The app is tested with google chrome and might not work with other browsers.</ListItem>
+            <ListItem>The app will use all of your CPU cores to generate the image. It can drain your battery quickly if you are using a laptop or mobile device.</ListItem>
             <ListItem>The app is open source and the code is available on <a target="_blank" rel="noopener noreferrer" href="https://github.com/miratcan/bedri">GitHub</a>. If you have any feedback, please <a target="_blank" rel="noopener noreferrer" href="https://github.com/miratcan/bedri/issues">open an issue</a>.</ListItem>
-            <ListItem>This app will use all of your CPU cores to generate the image. It can drain your battery quickly if you are using a laptop.</ListItem>
             <ListItem>How to use: select an image and enter text lines. Then click on the "Start" button to begin the genetic algorithm. Tweak the options to get better results.</ListItem>
             <ListItem>You can find inspiration from twitter by searching for <a target="_blank" rel="noopener noreferrer" href={`https://x.com/search?q=${encodeURIComponent('#bedriapp')}`}>#bedriapp</a>. Also please post your results with the hashtag <a target="_blank" rel="noopener noreferrer" href={`https://x.com/search?q=${encodeURIComponent('#bedriapp')}`}>#bedriapp</a>.</ListItem>
           </List>
@@ -610,8 +576,10 @@ export function App() {
                 onStop={stopProcessing}
                 onReset={reset}
                 onDownload={downloadImage}
-                totalProcessed={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.processed, 0) : 0}
-                linesCount={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.total, 0) : 0}
+                testedCandidates={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.processed, 0) : 0}
+                totalCandidates={processStats ? Object.values(processStats).reduce((sum, stat) => sum + stat.total, 0) : 0}
+                currentGeneration={currentGeneration}
+                totalGenerations={options.generations}
               />
             </WindowContent>
           </StyledWindow>

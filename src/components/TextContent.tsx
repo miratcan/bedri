@@ -1,26 +1,7 @@
-import { Select, TextField } from 'react95';
-import styled from 'styled-components';
-import { StyledFieldset } from './shared';
+import { Select, TextField, Fieldset } from 'react95';
+import { InputWrapper, Label, Description } from './StyledComponents';
 
 import { USE_TYPES } from '../constants';
-
-const InputWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-bottom: 10px;
-`;
-
-const Label = styled.label`
-  font-size: 12px;
-  color: #000000;
-`;
-
-const Description = styled.p`
-  font-size: 12px;
-  color: #000000;
-  margin-bottom: 10px;
-`;
 
 interface TextContentProps {
   inputValues: {
@@ -33,7 +14,7 @@ interface TextContentProps {
 
 export function TextContent({ inputValues, onTextInputChange, onSelectChange }: TextContentProps) {
   return (
-    <StyledFieldset label="Text Content">
+    <Fieldset label="Text Content">
       <Description>
         Enter the text blocks that will be used to draw the image. Each line will be treated as a separate block that can be placed and rotated independently.
       </Description>
@@ -50,14 +31,19 @@ export function TextContent({ inputValues, onTextInputChange, onSelectChange }: 
           }))}
         />
       </InputWrapper>
-      <TextField
-        name="blocks"
-        value={inputValues.blocks}
-        onChange={onTextInputChange}
-        multiline
-        rows={10}
-        fullWidth
-      />
-    </StyledFieldset>
+
+      <InputWrapper>
+        <Label htmlFor="blocksInput">Text Blocks</Label>
+        <TextField
+          name="blocks"
+          value={inputValues.blocks}
+          onChange={onTextInputChange}
+          placeholder="Enter text blocks (one per line)"
+          id="blocksInput"
+          multiline
+          rows={5}
+        />
+      </InputWrapper>
+    </Fieldset>
   );
 } 
