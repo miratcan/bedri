@@ -92,6 +92,13 @@ const ListItem = styled.li`
   }
 `;
 
+const BuyMeACoffee = styled.div`
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+`;
+
 export function App() {
   const [inputValues, setInputValues] = useState({
     blocks: DEFAULT_BLOCKS,
@@ -503,6 +510,12 @@ export function App() {
           </List>
         </WindowContent>
       </StyledWindow>
+
+      <BuyMeACoffee>
+        <a href="https://www.buymeacoffee.com/miratcan" target="_blank" rel="noopener noreferrer">
+          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style={{ height: '60px' }}/>
+        </a>
+      </BuyMeACoffee>
 
       <MainContent>
         <InputsContainer>
