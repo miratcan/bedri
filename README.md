@@ -4,9 +4,28 @@ A web application that uses genetic algorithms to generate text-based art from i
 
 ## Examples
 
-![](examples/1.jpeg)
-![](examples/2.png)
-![](examples/3.jpeg)
+<table>
+   <tr>
+      <td>
+         <a href="examples/1.jpeg">
+            <img width="300" alt="example1"
+                 src="examples/1.jpeg" />
+         </a>
+      </td>
+      <td>
+         <a href="examples/2.png">
+            <img width="300" alt="example2" 
+                 src="examples/2.png" />
+         </a>
+      </td>
+      <td>
+         <a href="examples/3.jpeg">
+            <img width="300" alt="example3" 
+                 src="examples/3.jpeg" />
+         </a>
+      </td>
+   </tr>
+</table>
 
 ## Features
 
