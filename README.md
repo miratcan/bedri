@@ -2,6 +2,12 @@
 
 A web application that uses genetic algorithms to generate text-based art from images. The application creates artistic representations of images using text characters, with customizable parameters for font, size, and processing options.
 
+## Examples
+
+![](examples/1.jpeg)
+![](examples/2.png)
+![](examples/3.jpeg)
+
 ## Features
 
 - Image upload and processing
