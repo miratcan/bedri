@@ -1,6 +1,8 @@
 # Bedri
 
-A web application that uses genetic algorithms to generate text-based art from images. The application creates artistic representations of images using text characters, with customizable parameters for font, size, and processing options.
+A web application that uses genetic algorithms to generate text-based art from images. Named after the Turkish painter [Bedri Baykam](https://en.wikipedia.org/wiki/Bedri_Baykam).
+
+**[Try it in your browser](https://mirat.dev/bedri/)**
 
 ## Examples
 
@@ -57,7 +59,7 @@ A web application that uses genetic algorithms to generate text-based art from i
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/bedri.git
+git clone https://github.com/miratcan/bedri.git
 cd bedri
 ```
 
